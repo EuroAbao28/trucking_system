@@ -1,0 +1,307 @@
+const Driver = require('../models/driverModel')
+const createError = require('http-errors')
+const sharp = require('sharp')
+const { isValidFileType } = require('../utils/validationFile')
+const { uploadImageToCloudinary } = require('../utils/cloudinaryUtils')
+const { validateFields } = require('../utils/validationFields')
+const { cloudinary } = require('../middlewares/multerCloudinary')
+
+// create driver
+const createDriver = async (req, res, next) => {
+  try {
+    const { firstname, lastname, phoneNo, status, licenseNo } = req.body
+
+    console.log(req.body)
+
+    // validate fields
+    validateFields(
+      {
+        firstname,
+        lastname,
+        phoneNo,
+        status,
+        licenseNo
+      },
+      false
+    )
+    // check if driver already exist
+    const isDriverAlreadyExist = await Driver.findOne({
+      firstname: { $regex: new RegExp(`^${firstname}$`, 'i') },
+      lastname: { $regex: new RegExp(`^${lastname}$`, 'i') }
+    })
+
+    if (isDriverAlreadyExist) {
+      return res.status(400).json({
+        message: 'Driver with this firstname and lastname already exists'
+      })
+    }
+
+    // upload profile picture to cloudinary (if provided)
+    let imageData = {
+      url: '',
+      publicId: ''
+    }
+
+    if (req.file) {
+      console.log(req.file)
+
+      try {
+        // validate file type
+        if (!isValidFileType(req.file.mimetype)) {
+          return next(
+            createError(400, 'Invalid file type. Only images are allowed')
+          )
+        }
+
+        // compress the image with sharp
+        const compressedImage = await sharp(req.file.buffer)
+          .rotate()
+          .resize({
+            width: 1200,
+            withoutEnlargement: true
+          })
+          .jpeg({
+            quality: 80,
+            mozjpeg: true
+          })
+          .toBuffer()
+
+        // upload the image to cloudinary
+        const uploadResult = await uploadImageToCloudinary(
+          compressedImage,
+          'Yza/driver'
+        )
+
+        imageData = {
+          url: uploadResult.secure_url,
+          publicId: uploadResult.public_id
+        }
+      } catch (error) {
+        return next(error)
+      }
+    }
+
+    // create new driver
+    const newDriver = await Driver.create({
+      firstname,
+      lastname,
+      phoneNo,
+      status,
+      licenseNo,
+      imageUrl: imageData.url,
+      imagePublicId: imageData.publicId
+    })
+
+    return res.status(201).json({
+      message: 'Driver created successfully',
+      driver: newDriver
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// test driver
+const getAllDrivers = async (req, res, next) => {
+  try {
+    const { status, sort, search, perPage, page = 1, showDeleted } = req.query
+
+    const query = {}
+
+    if (showDeleted !== 'true') {
+      query.$or = [
+        { isSoftDeleted: false },
+        { isSoftDeleted: { $exists: false } }
+      ]
+    }
+
+    //  filters
+    if (status) query.status = status
+
+    // search
+    if (search) {
+      const regex = { $regex: search, $options: 'i' }
+      query.$or = [
+        { firstname: regex },
+        { lastname: regex },
+        { phoneNo: regex }
+      ]
+    }
+
+    // pagination
+    const limit = parseInt(perPage)
+    const skip = (parseInt(page) - 1) * limit
+
+    // sorting
+    const sortOptions = {
+      oldest: { createdAt: 1 },
+      latest: { createdAt: -1 },
+      'a-z': { firstname: 1 },
+      'z-a': { firstname: -1 },
+      'trips-high': { tripCount: -1 },
+      'trips-low': { tripCount: 1 }
+    }
+
+    const sortQuery = sortOptions[sort] || sortOptions.latest
+
+    // query databas
+    const [total, drivers] = await Promise.all([
+      Driver.countDocuments(query),
+      Driver.find(query).skip(skip).limit(limit).sort(sortQuery)
+    ])
+
+    return res.status(200).json({
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+      drivers
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// update driver
+const updateDriver = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { firstname, lastname, phoneNo, status, licenseNo, tripCount } =
+      req.body
+
+    console.log(req.body)
+
+    // find the driver
+    const existingDriver = await Driver.findById(id)
+    if (!existingDriver) {
+      return next(createError(404, 'Driver not found'))
+    }
+
+    // handle file upload if provided
+    let imageUrl = existingDriver.imageUrl
+    let imagePublicId = existingDriver.imagePublicId
+
+    // if images are provided
+    if (req.file) {
+      console.log('IMAGE FOR UPDATE', req.file)
+
+      try {
+        // validate file type
+        if (!isValidFileType(req.file.mimetype)) {
+          return next(
+            createError(400, 'Invalid file type. Only images are allowed')
+          )
+        }
+
+        // Validate file size (16MB max)
+        const MAX_FILE_SIZE = 16 * 1024 * 1024
+        if (req.file.size > MAX_FILE_SIZE) {
+          return next(createError(400, 'Image size must be less than 16MB'))
+        }
+
+        // delete old picture if exist
+        if (imagePublicId) {
+          await cloudinary.uploader.destroy(imagePublicId)
+        }
+
+        // upload new image
+        const uploadResult = await uploadImageToCloudinary(
+          req.file.buffer,
+          'Yza/driver'
+        )
+
+        imageUrl = uploadResult.secure_url
+        imagePublicId = uploadResult.public_id
+      } catch (error) {
+        console.error('Cloudinary error:', error)
+        return next(createError(500, 'Failed to upload image'))
+      }
+    }
+
+    // update fields
+    const updatedFields = {
+      firstname: firstname || existingDriver.firstname,
+      lastname: lastname || existingDriver.lastname,
+      phoneNo: phoneNo || existingDriver.phoneNo,
+      status: status || existingDriver.status,
+      licenseNo: licenseNo || existingDriver.licenseNo,
+      tripCount: tripCount || existingDriver.tripCount,
+      imageUrl,
+      imagePublicId
+    }
+
+    Object.assign(existingDriver, updatedFields)
+    await existingDriver.save()
+
+    res.status(200).json({
+      message: 'Driver updated successfully',
+      driver: existingDriver
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// delete driver
+const hardDeleteDriver = async (req, res, next) => {
+  try {
+    const { id } = req.params
+
+    console.log('DELETE DRIVER ID', id)
+
+    // Find the driver to delete
+    const driverToDelete = await Driver.findByIdAndDelete(id)
+    if (!driverToDelete) {
+      return next(createError(404, 'Driver not found'))
+    }
+
+    // Delete profile picture from Cloudinary if it exists
+    if (driverToDelete.imagePublicId) {
+      await cloudinary.uploader.destroy(driverToDelete.imagePublicId)
+    }
+
+    return res.status(200).json({
+      message: 'Driver deleted successfully'
+    })
+  } catch (error) {
+    console.error('Error deleting driver:', error)
+    next(createError(500, 'Failed to delete driver'))
+  }
+}
+
+// soft delete
+const softDeleteDriver = async (req, res, next) => {
+  try {
+    const { id } = req.params
+
+    // Find the driver
+    const driver = await Driver.findById(id)
+    if (!driver) {
+      return next(createError(404, 'Driver not found'))
+    }
+
+    // Check if already deleted
+    if (driver.isSoftDeleted) {
+      return next(createError(400, 'Driver is already deleted'))
+    }
+
+    // Soft delete the driver
+    driver.isSoftDeleted = true
+
+    await driver.save()
+
+    res.status(200).json({
+      success: true,
+      message: 'Driver deleted successfully'
+    })
+  } catch (error) {
+    next(error)
+  }
+}
+
+module.exports = {
+  createDriver,
+  getAllDrivers,
+  updateDriver,
+  hardDeleteDriver,
+  softDeleteDriver
+}
