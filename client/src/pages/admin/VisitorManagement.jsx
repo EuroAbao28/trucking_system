@@ -275,7 +275,7 @@ function VisitorManagement () {
               </div>
             </div>
           </div>
-        ) : allVisitors.length === 0 ? (
+        ) : !allVisitors || allVisitors.length === 0 ? (
           <div className='flex-1 flex justify-center items-center'>
             <div className='flex flex-col justify-center items-center gap-4 px-4 text-center'>
               <img src={empty_illustration} alt='empty list' className='w-56' />

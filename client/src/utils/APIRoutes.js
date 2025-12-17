@@ -22,3 +22,9 @@ export const API_ANALYTICS = `${LIVE}/api/analytics`
 
 //  access
 export const API_CLIENT = `${LIVE}/api/client`
+
+// activitylogs
+export const API_ACTIVITY_LOGS = `${LIVE}/api/activity-logs`
+
+// timeline logs
+export const API_TIMELINE_LOGS = `${LIVE}/api/timeline-logs`

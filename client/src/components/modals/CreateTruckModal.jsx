@@ -12,21 +12,14 @@ import { LuUpload } from 'react-icons/lu'
 import { FaSave } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import useCreateTruck from '../../hooks/useCreateTruck'
-import {
-  TRUCK_CONDITIONS,
-  TRUCK_STATUSES,
-  TRUCK_TOOLS,
-  TRUCK_TYPES
-} from '../../utils/generalOptions'
+import { TRUCK_STATUSES, TRUCK_TYPES } from '../../utils/generalOptions'
 
 function CreateTruckModal ({ isOpen, onClose, onCreate, allTools }) {
   const [formData, setFormData] = useState({
     plateNo: '',
     truckType: '',
-    condition: '',
     status: '',
-    image: {},
-    tools: []
+    image: {}
   })
 
   const [previewImage, setPreviewImage] = useState(null)
@@ -44,10 +37,8 @@ function CreateTruckModal ({ isOpen, onClose, onCreate, allTools }) {
     setFormData({
       plateNo: '',
       truckType: '',
-      condition: '',
       status: '',
-      image: {},
-      tools: []
+      image: {}
     })
   }
 
@@ -250,33 +241,6 @@ function CreateTruckModal ({ isOpen, onClose, onCreate, allTools }) {
                   </div>
                 </label>
 
-                {/* condition */}
-                <label className='flex flex-col gap-1'>
-                  <span className='uppercase text-xs text-gray-500 font-semibold'>
-                    Condition
-                  </span>
-                  <div className='relative'>
-                    <select
-                      name='condition'
-                      value={formData.condition}
-                      onChange={handleChange}
-                      required
-                      className='outline outline-gray-300 px-3 borde py-2 rounded focus:outline-2 focus:outline-gray-400 appearance-none w-full'
-                    >
-                      <option value='' disabled>
-                        Select
-                      </option>
-
-                      {TRUCK_CONDITIONS.map((item, index) => (
-                        <option key={index} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                    <MdKeyboardArrowDown className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-lg' />
-                  </div>
-                </label>
-
                 {/* status */}
                 <label className='flex flex-col gap-1'>
                   <span className='uppercase text-xs text-gray-500 font-semibold'>
@@ -303,7 +267,7 @@ function CreateTruckModal ({ isOpen, onClose, onCreate, allTools }) {
                   </div>
                 </label>
 
-                <div className='col-span-full flex flex-col gap-1'>
+                {/* <div className='col-span-full flex flex-col gap-1'>
                   <label className='uppercase text-xs text-gray-500 font-semibold'>
                     Tool Selection
                   </label>
@@ -345,12 +309,12 @@ function CreateTruckModal ({ isOpen, onClose, onCreate, allTools }) {
                       )
                     })}
                   </div>
-                </div>
+                </div> */}
 
                 <div className='mt-12 col-span-full'>
                   <button
                     type='submit'
-                    className='bg-primaryColor text-white px-8 py-2 uppercase text-sm font-semibold rounded flex items-center gap-2 cursor-pointer active:scale-95 transition-all hover:brightness-95'
+                    className='bg-linear-to-b from-emerald-500 to-emerald-600 text-white px-8 py-2 uppercase text-sm font-semibold rounded flex items-center gap-2 cursor-pointer active:scale-95 transition-all hover:brightness-95'
                   >
                     {isLoading ? (
                       <>

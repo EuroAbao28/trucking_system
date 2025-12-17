@@ -5,6 +5,7 @@ const { isValidFileType } = require('../utils/validationFile')
 const { uploadImageToCloudinary } = require('../utils/cloudinaryUtils')
 const { validateFields } = require('../utils/validationFields')
 const { cloudinary } = require('../middlewares/multerCloudinary')
+const ActivityLog = require('../models/activityLogsModel')
 
 // create driver
 const createDriver = async (req, res, next) => {
@@ -90,6 +91,14 @@ const createDriver = async (req, res, next) => {
       licenseNo,
       imageUrl: imageData.url,
       imagePublicId: imageData.publicId
+    })
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'driver',
+      performedBy: req.user._id,
+      action: 'Created new driver',
+      targetDriver: newDriver._id
     })
 
     return res.status(201).json({
@@ -217,8 +226,28 @@ const updateDriver = async (req, res, next) => {
       }
     }
 
+    // Track which fields are being updated for activity log
+    const updatedFields = []
+    if (firstname && firstname !== existingDriver.firstname)
+      updatedFields.push('firstname')
+    if (lastname && lastname !== existingDriver.lastname)
+      updatedFields.push('lastname')
+    if (phoneNo && phoneNo !== existingDriver.phoneNo)
+      updatedFields.push('phone number')
+    if (status && status !== existingDriver.status) updatedFields.push('status')
+    if (licenseNo && licenseNo !== existingDriver.licenseNo)
+      updatedFields.push('license number')
+    if (tripCount && parseInt(tripCount) !== existingDriver.tripCount)
+      updatedFields.push('trip count')
+    if (req.file) updatedFields.push('profile picture')
+
+    const actionMessage =
+      updatedFields.length > 0
+        ? `Updated driver's ${updatedFields.join(', ')}`
+        : 'Updated driver details'
+
     // update fields
-    const updatedFields = {
+    const updatedFieldsData = {
       firstname: firstname || existingDriver.firstname,
       lastname: lastname || existingDriver.lastname,
       phoneNo: phoneNo || existingDriver.phoneNo,
@@ -229,8 +258,16 @@ const updateDriver = async (req, res, next) => {
       imagePublicId
     }
 
-    Object.assign(existingDriver, updatedFields)
+    Object.assign(existingDriver, updatedFieldsData)
     await existingDriver.save()
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'driver',
+      performedBy: req.user._id,
+      action: actionMessage,
+      targetDriver: existingDriver._id
+    })
 
     res.status(200).json({
       message: 'Driver updated successfully',
@@ -288,6 +325,14 @@ const softDeleteDriver = async (req, res, next) => {
     driver.isSoftDeleted = true
 
     await driver.save()
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'driver',
+      performedBy: req.user._id,
+      action: 'Deleted a driver',
+      targetDriver: driver._id
+    })
 
     res.status(200).json({
       success: true,

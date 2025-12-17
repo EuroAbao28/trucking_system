@@ -45,7 +45,7 @@ function ReplacementHistoryModal ({ isOpen, onClose, deployment }) {
             <div className='px-6 py-8'>
               <h2 className='text-lg font-semibold'>Replacement History</h2>
 
-              {deployment.replacement &&
+              {deployment?.replacement &&
               deployment.replacement.replacementTruckId._id ? (
                 <div className='mt-6'>
                   <div className='grid grid-cols-2 gap-6'>

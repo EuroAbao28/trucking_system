@@ -1,43 +1,44 @@
 import React, { useEffect, useState } from 'react'
-import { FaFilter, FaPlus, FaSearch } from 'react-icons/fa'
-import {
-  empty_illustration,
-  error_illustration,
-  no_image,
-  user_placeholder
-} from '../../consts/images'
+import { FaFilter, FaSearch } from 'react-icons/fa'
+import { IoClose } from 'react-icons/io5'
 import {
   MdOutlineKeyboardArrowLeft,
   MdOutlineKeyboardArrowRight
 } from 'react-icons/md'
-import { IoClose } from 'react-icons/io5'
+import {
+  empty_illustration,
+  error_illustration,
+  user_placeholder
+} from '../../consts/images'
+import useGetAllTimelineLogs from '../../hooks/useGetAllTimelineLogs'
 import clsx from 'clsx'
-import CreateDriverModal from '../../components/modals/CreateDriverModal'
-import DriverDetailsModal from '../../components/modals/DriverDetailsModal'
-import useGetAllDriver from '../../hooks/useGetAllDriver'
-import DeleteDriverModal from '../../components/modals/DeleteDriverModal'
+import { DateTime } from 'luxon'
+import TimelineLogDetailsModal from '../../components/modals/TimelineLogDetailsModal'
+import ReplacementHistoryModal from '../../components/modals/ReplacementHistoryModal'
 
 const defaultFilters = {
-  status: '',
   sort: 'latest',
+  status: '',
+  date: '',
   search: '',
   perPage: 40,
   page: 1
 }
 
-function DriverManagement () {
-  const [isDriverDetailsModalOpen, setIsDriverDetailsModalOpen] =
+function TimelineLogs () {
+  const [isTimelineLogDetailsModalOpen, setIsTimelineLogDetailsModalOpen] =
     useState(false)
-  const [isCreateDriverModalOpen, setIsCreateDriverModalOpen] = useState(false)
-  const [isDeleteDriverModalOpen, setIsDeleteDriverModalOpen] = useState(false)
+  const [selectedTimelineLog, setSelectedTimelineLog] = useState({})
+  const [isDeploymentDetailsModalOpen, setIsDeploymentDetailsModalOpen] =
+    useState(false)
+  const [showReplacementHistory, setShowReplacementHistory] = useState(false)
 
-  const { getAllDriverFunction, isLoading } = useGetAllDriver()
-  const [allDrivers, setAllDrivers] = useState([])
+  const { getAllTimelineLogsFunction, isLoading } = useGetAllTimelineLogs()
+  const [allTimelineLogs, setAllTimelineLogs] = useState([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(null)
   const [totalPages, setTotalPages] = useState(null)
   const [error, setError] = useState(null)
-  const [selectedDriver, setSelectedDriver] = useState({})
 
   const [filters, setFilters] = useState(defaultFilters)
   const [tempFilters, setTempFilters] = useState(defaultFilters)
@@ -49,12 +50,10 @@ function DriverManagement () {
 
   const handleApplyFilters = e => {
     e.preventDefault()
-
     setFilters(tempFilters)
   }
 
   const handleResetFilters = () => {
-    // check if filters are already in default state
     const isDefault = Object.keys(defaultFilters).every(
       key => tempFilters[key] === defaultFilters[key]
     )
@@ -78,48 +77,98 @@ function DriverManagement () {
     }
   }
 
-  const handleShowDriverDetailsModal = data => {
-    setSelectedDriver(data)
-    setIsDriverDetailsModalOpen(true)
+  const handleShowTimelineLogDetailsModal = data => {
+    setSelectedTimelineLog(data)
+    setIsTimelineLogDetailsModalOpen(true)
   }
 
-  // for updating the all admins with the updated driver
-  const handleUpdateAllAdmins = updatedDriver => {
-    setAllDrivers(prevAllDrivers =>
-      prevAllDrivers.map(driver =>
-        driver._id === updatedDriver._id ? updatedDriver : driver
-      )
-    )
+  // Format date for display using Luxon
+  const formatDate = dateString => {
+    try {
+      const dt = DateTime.fromISO(dateString)
+      return dt.isValid ? dt.toFormat('MMM dd, yyyy hh:mm a') : 'Invalid date'
+    } catch (error) {
+      return 'Invalid date'
+    }
   }
 
-  // for removing the deleted driver
-  const handleRemoveDeletedDriver = deletedDriver => {
-    setAllDrivers(prev => prev.filter(driver => driver._id !== deletedDriver))
-    setIsDeleteDriverModalOpen(false)
-    setIsDriverDetailsModalOpen(false)
+  // Get the action timestamp directly from the log's timestamps field
+  const getActionTimestamp = log => {
+    // Use the timestamps field from the schema
+    if (log.timestamp) {
+      return formatDate(log.timestamp)
+    }
+    // Fallback to createdAt if timestamps is not available
+    return formatDate(log.createdAt)
   }
 
-  const handleAddNewDriver = newDriver => {
-    console.log('NEW DRIVER', newDriver)
-    setAllDrivers(prev => [newDriver, ...prev])
+  // Get deployment code from timeline log
+  const getDeploymentCode = log => {
+    return log.targetDeployment?.deploymentCode || 'N/A'
+  }
+
+  // Get user's full name
+  const getUserFullName = log => {
+    if (log.performedBy) {
+      return `${log.performedBy.firstname || ''} ${
+        log.performedBy.lastname || ''
+      }`.trim()
+    }
+    return 'Unknown User'
+  }
+
+  // Get truck plate from deployment
+  const getTruckPlate = log => {
+    if (log.targetDeployment?.truckId?.plateNo) {
+      return log.targetDeployment.truckId.plateNo
+    }
+    if (log.targetDeployment?.replacement?.replacementTruckId?.plateNo) {
+      return log.targetDeployment.replacement.replacementTruckId.plateNo
+    }
+    return 'N/A'
+  }
+
+  // Get driver name from deployment
+  const getDriverName = log => {
+    if (log.targetDeployment?.driverId) {
+      return `${log.targetDeployment.driverId.firstname || ''} ${
+        log.targetDeployment.driverId.lastname || ''
+      }`.trim()
+    }
+    if (log.targetDeployment?.replacement?.replacementDriverId) {
+      const driver = log.targetDeployment.replacement.replacementDriverId
+      return `${driver.firstname || ''} ${driver.lastname || ''}`.trim()
+    }
+    return 'Unknown Driver'
+  }
+
+  // Get status badge color
+  const getStatusBadgeColor = status => {
+    const statusColors = {
+      preparing: 'bg-orange-500/10 text-orange-500',
+      ongoing: 'bg-emerald-500/10 text-emerald-500',
+      completed: 'bg-blue-500/10 text-blue-500',
+      canceled: 'bg-red-500/10 text-red-500'
+    }
+    return statusColors[status] || 'bg-gray-500/10 text-gray-500'
   }
 
   useEffect(() => {
-    const handleGetAllDrivers = async () => {
-      const { drivers, total, page, totalPages, error } =
-        await getAllDriverFunction(filters)
+    const handleGetAllTimelineLogs = async () => {
+      const { timelineLogs, total, page, totalPages, error } =
+        await getAllTimelineLogsFunction(filters)
 
       if (error) {
         setError(error)
       }
 
-      setAllDrivers(drivers)
+      setAllTimelineLogs(timelineLogs || [])
       setTotal(total)
       setPage(page)
       setTotalPages(totalPages)
     }
 
-    handleGetAllDrivers()
+    handleGetAllTimelineLogs()
   }, [filters])
 
   return (
@@ -127,7 +176,7 @@ function DriverManagement () {
       <div className='flex-1 flex flex-col gap-10'>
         {/* header */}
         <div className='flex items-center flex-wrap gap-x-12 gap-y-4'>
-          <h1 className='font-semibold text-2xl mr-auto'>Manage Drivers</h1>
+          <h1 className='font-semibold text-2xl mr-auto'>Deployment Logs</h1>
 
           {/* right side */}
           <div className='flex flex-wrap gap-4'>
@@ -159,8 +208,6 @@ function DriverManagement () {
                     >
                       <option value='latest'>Latest</option>
                       <option value='oldest'>Oldest</option>
-                      <option value='a-z'>A to Z</option>
-                      <option value='z-a'>Z to A</option>
                     </select>
                   </label>
 
@@ -173,15 +220,28 @@ function DriverManagement () {
                       className='w-full focus:outline-none'
                     >
                       <option value=''>All</option>
-                      <option value='active'>Active</option>
-                      <option value='inactive'>Inactive</option>
+                      <option value='preparing'>Preparing</option>
+                      <option value='ongoing'>Ongoing</option>
+                      <option value='completed'>Completed</option>
+                      <option value='canceled'>Canceled</option>
                     </select>
+                  </label>
+
+                  <label className='col-span-2 flex items-center justify-between text-sm outline outline-gray-200 rounded py-2 px-3 gap-2'>
+                    <p className='font-semibold whitespace-nowrap'>Date</p>
+                    <input
+                      type='date'
+                      name='date'
+                      value={tempFilters.date}
+                      onChange={handleChangeFilter}
+                      className='focus:outline-none'
+                    />
                   </label>
 
                   <button
                     onClick={handleResetFilters}
                     disabled={isLoading}
-                    className='bg-gray-200 text-gray-600  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
+                    className='bg-linear-to-b from-gray-100 to-gray-200  text-gray-600  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
                   >
                     Reset
                   </button>
@@ -206,7 +266,7 @@ function DriverManagement () {
               <input
                 type='text'
                 name='search'
-                placeholder='Search'
+                placeholder='Search logs...'
                 value={tempFilters.search}
                 onChange={handleChangeFilter}
                 autoComplete='off'
@@ -239,7 +299,7 @@ function DriverManagement () {
 
               <p className='text-sm min-w-22 text-center'>
                 {!isLoading &&
-                  allDrivers &&
+                  allTimelineLogs &&
                   `Page ${total > 0 ? page : total} of ${totalPages}`}
               </p>
 
@@ -251,16 +311,6 @@ function DriverManagement () {
                 <MdOutlineKeyboardArrowRight />
               </button>
             </div>
-
-            {/* create button */}
-            <button
-              onClick={() => setIsCreateDriverModalOpen(true)}
-              disabled={isLoading}
-              className='flex items-center gap-4 bg-linear-to-b from-emerald-500 to-emerald-600 text-white text-nowrap rounded px-3 py-1 cursor-pointer active:scale-95 transition-all hover:brightness-95'
-            >
-              <FaPlus className='text-sm' />
-              <p>Create New</p>
-            </button>
           </div>
         </div>
 
@@ -288,7 +338,7 @@ function DriverManagement () {
               </div>
             </div>
           </div>
-        ) : allDrivers.length === 0 ? (
+        ) : !allTimelineLogs || allTimelineLogs.length === 0 ? (
           <div className='flex-1 flex justify-center items-center'>
             <div className='flex flex-col justify-center items-center gap-4 px-4 text-center'>
               <img src={empty_illustration} alt='empty list' className='w-56' />
@@ -297,9 +347,9 @@ function DriverManagement () {
                   Nothing to show here
                 </h1>
                 <p className='text-gray-500 max-w-md leading-relaxed'>
-                  {tempFilters.search || tempFilters.status
-                    ? 'Try adjusting your search terms or filters to see more results'
-                    : 'Get started by adding your first driver to the system'}
+                  {tempFilters.search
+                    ? 'Try adjusting your search terms to see more results'
+                    : 'No timeline activity has been recorded yet'}
                 </p>
               </div>
             </div>
@@ -309,63 +359,62 @@ function DriverManagement () {
             <div className='absolute inset-0'>
               <table className='table table-md table-pin-rows table-pin-cols'>
                 <thead>
-                  <tr className='bg-white border-b border-gray-200  text-gray-800'>
+                  <tr className='bg-white border-b border-gray-200 text-gray-800'>
                     <td>{total}</td>
-                    <td>Image</td>
-                    <td>Fullname</td>
-                    <td>Phone No.</td>
-                    <td>License No.</td>
-                    <td>Trip Count</td>
+                    <td>Code</td>
+                    <td>Action Details</td>
                     <td>Status</td>
+                    <td>Truck Plate</td>
+                    <td>Driver</td>
+                    <td>Timestamp</td>
                   </tr>
                 </thead>
                 <tbody>
-                  {allDrivers.map((driver, index) => (
+                  {allTimelineLogs.map((log, index) => (
                     <tr
-                      key={index}
-                      onClick={() => handleShowDriverDetailsModal(driver)}
-                      className='border-b border-gray-200 last:border-none hover:bg-gray-50 capitalize cursor-pointer'
+                      key={log._id || index}
+                      onClick={() => handleShowTimelineLogDetailsModal(log)}
+                      className='border-b border-gray-200 last:border-none hover:bg-gray-50 cursor-pointer'
                     >
                       <td className='text-xs font-bold text-gray-600'>
                         {(page - 1) * filters.perPage + index + 1}
                       </td>
-                      <td className='py-0'>
-                        <img
-                          src={driver.imageUrl || no_image}
-                          alt='img'
-                          className={clsx(
-                            'w-9 aspect-square object-cover object-center mask mask-squircle',
-                            {
-                              'opacity-10': !driver.imageUrl
-                            }
-                          )}
-                        />
-                      </td>
+
                       <td>
-                        <p className='text-nowrap capitalize'>{`${driver.firstname} ${driver.lastname}`}</p>
+                        <div>{getDeploymentCode(log)}</div>
                       </td>
-                      <td>{driver.phoneNo}</td>
+
                       <td>
-                        <p className='text-nowrap uppercase'>
-                          {driver.licenseNo}
+                        <p className='text-sm max-w-xs' title={log.action}>
+                          {log.action}
                         </p>
                       </td>
-                      <td>{driver.tripCount}</td>
+
                       <td>
-                        <div
-                          className={clsx(
-                            'rounded-full px-2 w-fit capitalize text-xs py-0.5',
-                            {
-                              'bg-emerald-500/10 text-emerald-500':
-                                driver.status === 'available',
-                              'bg-blue-500/10 text-blue-500':
-                                driver.status === 'deployed',
-                              'bg-red-500/10 text-red-500':
-                                driver.status === 'unavailable'
-                            }
-                          )}
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs capitalize ${getStatusBadgeColor(
+                            log.status
+                          )}`}
                         >
-                          {driver.status}
+                          {log.status}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className='text-sm uppercase'>
+                          {getTruckPlate(log)}
+                        </div>
+                      </td>
+
+                      <td>
+                        <p className='text-nowrap capitalize'>
+                          {getDriverName(log)}
+                        </p>
+                      </td>
+
+                      <td>
+                        <div className='text-sm text-gray-600'>
+                          {getActionTimestamp(log)}
                         </div>
                       </td>
                     </tr>
@@ -377,31 +426,20 @@ function DriverManagement () {
         )}
       </div>
 
-      {/* driver details modal */}
-      <DriverDetailsModal
-        isOpen={isDriverDetailsModalOpen}
-        onClose={() => setIsDriverDetailsModalOpen(false)}
-        driver={selectedDriver}
-        onUpdate={handleUpdateAllAdmins}
-        openDeleteModal={() => setIsDeleteDriverModalOpen(true)}
+      <TimelineLogDetailsModal
+        isOpen={isTimelineLogDetailsModalOpen}
+        onClose={() => setIsTimelineLogDetailsModalOpen(false)}
+        timelineLog={selectedTimelineLog}
+        openReplacementHistory={() => setShowReplacementHistory(true)}
       />
 
-      {/* create driver modal */}
-      <CreateDriverModal
-        isOpen={isCreateDriverModalOpen}
-        onClose={() => setIsCreateDriverModalOpen(false)}
-        onCreate={handleAddNewDriver}
-      />
-
-      {/* delete driver modal */}
-      <DeleteDriverModal
-        isOpen={isDeleteDriverModalOpen}
-        onClose={() => setIsDeleteDriverModalOpen(false)}
-        driver={selectedDriver}
-        onDelete={handleRemoveDeletedDriver}
+      <ReplacementHistoryModal
+        isOpen={showReplacementHistory}
+        onClose={() => setShowReplacementHistory(false)}
+        deployment={selectedTimelineLog.targetDeployment}
       />
     </>
   )
 }
 
-export default DriverManagement
+export default TimelineLogs

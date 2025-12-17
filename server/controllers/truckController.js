@@ -10,11 +10,12 @@ const {
 } = require('../utils/validationTruckFields')
 const { uploadImageToCloudinary } = require('../utils/cloudinaryUtils')
 const { cloudinary } = require('../middlewares/multerCloudinary')
+const ActivityLog = require('../models/activityLogsModel')
 
 // create truck
 const createTruck = async (req, res, next) => {
   try {
-    const { plateNo, truckType, condition, status, tools } = req.body
+    const { plateNo, truckType, status } = req.body
 
     console.log('CREATE TRUCK BODY', req.body)
 
@@ -23,7 +24,6 @@ const createTruck = async (req, res, next) => {
 
     // validate other fields
     validateType(truckType)
-    validateCondition(condition)
     validateStatus(status)
 
     // check if truck with same plate number already exists
@@ -35,17 +35,6 @@ const createTruck = async (req, res, next) => {
       return next(
         createError(409, 'Truck with this plate number already exists')
       )
-    }
-
-    // parse tools if it's a string (from FormData)
-    let toolsArray = []
-    if (tools) {
-      try {
-        toolsArray = typeof tools === 'string' ? JSON.parse(tools) : tools
-      } catch (error) {
-        console.log('Error parsing tools:', error)
-        toolsArray = []
-      }
     }
 
     // upload profile picture to cloudinary (if provided)
@@ -97,11 +86,17 @@ const createTruck = async (req, res, next) => {
     const newTruck = await Truck.create({
       plateNo,
       truckType,
-      condition,
       status,
-      tools: toolsArray,
       imageUrl: imageData.url,
       imagePublicId: imageData.publicId
+    })
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'truck',
+      performedBy: req.user._id,
+      action: 'Created new truck',
+      targetTruck: newTruck._id
     })
 
     return res.status(201).json({
@@ -204,7 +199,7 @@ const getAllTrucks = async (req, res, next) => {
 const updateTruck = async (req, res, next) => {
   try {
     const { id } = req.params
-    const { plateNo, truckType, condition, status, tools } = req.body
+    const { plateNo, truckType, status } = req.body
 
     console.log('UPDATE TRUCK BODY', req.body)
 
@@ -212,31 +207,6 @@ const updateTruck = async (req, res, next) => {
     const existingTruck = await Truck.findById(id)
     if (!existingTruck) {
       return next(createError(404, 'Truck not found'))
-    }
-
-    // parse tools if it's a string (from FormData)
-    let toolsArray = []
-    if (tools) {
-      try {
-        toolsArray = typeof tools === 'string' ? JSON.parse(tools) : tools
-
-        // validate tools structure
-        if (Array.isArray(toolsArray)) {
-          toolsArray = toolsArray.filter(
-            tool =>
-              tool &&
-              tool.tool &&
-              typeof tool.tool === 'string' &&
-              typeof tool.quantity === 'number' &&
-              tool.quantity >= 1
-          )
-        } else {
-          toolsArray = []
-        }
-      } catch (error) {
-        console.log('Error parsing tools:', error)
-        toolsArray = []
-      }
     }
 
     // handle file upload if provided
@@ -280,19 +250,37 @@ const updateTruck = async (req, res, next) => {
       }
     }
 
+    const updatedFields = []
+    if (plateNo && plateNo !== existingTruck.plateNo)
+      updatedFields.push('plate number')
+    if (truckType && truckType !== existingTruck.truckType)
+      updatedFields.push('truck type')
+    if (status && status !== existingTruck.status) updatedFields.push('status')
+
+    const actionMessage =
+      updatedFields.length > 0
+        ? `Updated truck's ${updatedFields.join(', ')}`
+        : 'Updated truck details'
+
     // update fields
-    const updatedFields = {
+    const updatedFieldsData = {
       plateNo: plateNo || existingTruck.plateNo,
       truckType: truckType ?? existingTruck.truckType,
-      condition: condition || existingTruck.condition,
       status: status || existingTruck.status,
       imageUrl,
-      imagePublicId,
-      tools: toolsArray
+      imagePublicId
     }
 
-    Object.assign(existingTruck, updatedFields)
+    Object.assign(existingTruck, updatedFieldsData)
     await existingTruck.save()
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'truck',
+      performedBy: req.user._id,
+      action: actionMessage,
+      targetDriver: existingTruck._id
+    })
 
     res.status(200).json({
       message: 'Truck updated successfully',
@@ -349,6 +337,14 @@ const softDeleteTruck = async (req, res, next) => {
     truck.isSoftDeleted = true
 
     await truck.save()
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'truck',
+      performedBy: req.user._id,
+      action: 'Deleted a truck',
+      targetDriver: truck._id
+    })
 
     res.status(200).json({
       success: true,

@@ -53,7 +53,7 @@ function CreateDeploymentModal ({ isOpen, onClose, onCreate, trucks, drivers }) 
 
   const driverOptions =
     drivers
-      ?.filter(driver => driver.status === 'active')
+      ?.filter(driver => driver.status === 'available')
       .map(driver => ({
         value: driver._id,
         label: `${driver.firstname} ${driver.lastname}`
@@ -187,7 +187,7 @@ function CreateDeploymentModal ({ isOpen, onClose, onCreate, trucks, drivers }) 
                         <MdKeyboardArrowDown className='h-5 w-5 text-gray-400' />
                       </ComboboxButton>
                       <ComboboxOptions className='absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white outline-1 outline-gray-300 py-1 text-base shadow-sm focus:outline-none sm:text-sm'>
-                        {filteredTrucks.length === 0 && truckQuery !== '' ? (
+                        {filteredTrucks.length === 0 ? (
                           <div className='relative cursor-default select-none px-4 py-2 text-gray-700'>
                             Nothing found.
                           </div>
@@ -245,7 +245,7 @@ function CreateDeploymentModal ({ isOpen, onClose, onCreate, trucks, drivers }) 
                         <MdKeyboardArrowDown className='h-5 w-5 text-gray-400' />
                       </ComboboxButton>
                       <ComboboxOptions className='absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white outline-1 outline-gray-300 py-1 text-base shadow-sm focus:outline-none sm:text-sm'>
-                        {filteredDrivers.length === 0 && driverQuery !== '' ? (
+                        {filteredDrivers.length === 0 ? (
                           <div className='relative cursor-default select-none px-4 py-2 text-gray-700'>
                             Nothing found.
                           </div>

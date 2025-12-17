@@ -37,8 +37,8 @@ const driverSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['active', 'inactive'],
-      default: 'active'
+      enum: ['available', 'deployed', 'unavailable'],
+      default: 'available'
     },
     tripCount: {
       type: Number,

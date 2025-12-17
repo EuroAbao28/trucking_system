@@ -261,8 +261,9 @@ function DriverDetailsModal ({
                           onChange={handleChange}
                           className='outline outline-gray-200 px-3 py-2 rounded focus:outline-gray-400 appearance-none w-full'
                         >
-                          <option value='active'>Active</option>
-                          <option value='inactive'>Inactive</option>
+                          <option value='available'>Available</option>
+                          <option value='deployed'>Deployed</option>
+                          <option value='unavailable'>Unavailable</option>
                         </select>
                         <MdKeyboardArrowDown className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-lg' />
                       </div>
@@ -270,12 +271,14 @@ function DriverDetailsModal ({
                       <div className='outline outline-gray-200 px-3 py-2 rounded'>
                         <p
                           className={clsx(
-                            'capitalize w-fit px-2 py-0.5 rounded-full text-sm font-medium',
+                            'capitalize w-fit px-2 py-0.5 rounded-full text-sm',
                             {
                               'bg-emerald-500/10 text-emerald-500':
-                                editForm?.status === 'active',
+                                editForm?.status === 'available',
+                              'bg-blue-500/10 text-blue-500':
+                                editForm?.status === 'deployed',
                               'bg-red-500/10 text-red-500':
-                                editForm?.status === 'inactive'
+                                editForm?.status === 'unavailable'
                             }
                           )}
                         >

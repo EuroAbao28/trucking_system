@@ -60,7 +60,7 @@ function ReplacementModal ({
       driver =>
         (driver.firstname.toLowerCase().includes(driverQuery.toLowerCase()) ||
           driver.lastname.toLowerCase().includes(driverQuery.toLowerCase())) &&
-        driver.status === 'active' &&
+        driver.status === 'available' &&
         driver._id !== deployment?.driverId?._id
     ) || []
 
@@ -189,7 +189,7 @@ function ReplacementModal ({
                         <MdKeyboardArrowDown className='h-5 w-5 text-gray-400' />
                       </ComboboxButton>
                       <ComboboxOptions className='absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white outline-1 outline-gray-300 py-1 text-base shadow-sm focus:outline-none sm:text-sm'>
-                        {filteredTrucks.length === 0 && truckQuery !== '' ? (
+                        {filteredTrucks.length === 0 ? (
                           <div className='relative cursor-default select-none px-4 py-2 text-gray-700'>
                             Nothing found.
                           </div>
@@ -247,7 +247,7 @@ function ReplacementModal ({
                         <MdKeyboardArrowDown className='h-5 w-5 text-gray-400' />
                       </ComboboxButton>
                       <ComboboxOptions className='absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white outline-1 outline-gray-300 py-1 text-base shadow-sm focus:outline-none sm:text-sm'>
-                        {filteredDrivers.length === 0 && driverQuery !== '' ? (
+                        {filteredDrivers.length === 0 ? (
                           <div className='relative cursor-default select-none px-4 py-2 text-gray-700'>
                             Nothing found.
                           </div>

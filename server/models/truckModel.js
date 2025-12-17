@@ -22,11 +22,6 @@ const truckSchema = new mongoose.Schema(
         'multicab'
       ]
     },
-    condition: {
-      type: String,
-      enum: ['good', 'maintenance-required', 'under-maintenance'],
-      default: 'good'
-    },
     status: {
       type: String,
       enum: ['available', 'deployed', 'unavailable'],
@@ -40,19 +35,7 @@ const truckSchema = new mongoose.Schema(
       type: String,
       default: '' // image id will be stored here
     },
-    tools: [
-      {
-        tool: {
-          type: String,
-          required: true
-        },
-        quantity: {
-          type: Number,
-          required: true,
-          min: 1
-        }
-      }
-    ],
+
     isSoftDeleted: {
       type: Boolean,
       default: false

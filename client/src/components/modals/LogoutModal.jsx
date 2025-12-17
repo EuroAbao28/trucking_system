@@ -29,12 +29,10 @@ function LogoutModal ({ isOpen, onClose }) {
         }
       )
 
-      setTimeout(() => {
-        toast.success(response.data.message || 'Logged out successfully')
-        sessionStorage.removeItem('userToken')
-        navigate('/')
-        setIsLogoutLoading(false)
-      }, 2000)
+      toast.success(response.data.message || 'Logged out successfully')
+      sessionStorage.removeItem('userToken')
+      navigate('/')
+      setIsLogoutLoading(false)
     } catch (error) {
       console.log(error)
       toast.success('Logged out successfully')

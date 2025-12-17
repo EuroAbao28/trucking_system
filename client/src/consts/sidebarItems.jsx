@@ -5,9 +5,9 @@ import {
   TbMapPin,
   TbTruck,
   TbUserCog,
-  TbUserCheck,
   TbUsers,
-  TbUserShield
+  TbUserShield,
+  TbTimelineEventText
 } from 'react-icons/tb'
 
 export const SIDEBAR_ITEMS = [
@@ -26,6 +26,12 @@ export const SIDEBAR_ITEMS = [
     icon: <TbCalendarClock />,
     name: 'Calendar',
     path: '/secure/calendar',
+    role: ['head_admin', 'admin', 'visitor']
+  },
+  {
+    icon: <TbTimelineEventText />,
+    name: 'Deployment Logs',
+    path: '/secure/deployment-logs',
     role: ['head_admin', 'admin', 'visitor']
   },
   {

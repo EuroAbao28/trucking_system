@@ -19,7 +19,7 @@ function CreateDriverModal ({ isOpen, onClose, onCreate }) {
     firstname: '',
     lastname: '',
     phoneNo: '',
-    status: 'active',
+    status: 'available',
     licenseNo: '',
     licenseExpiryDate: '',
     image: {}
@@ -41,9 +41,9 @@ function CreateDriverModal ({ isOpen, onClose, onCreate }) {
       firstname: '',
       lastname: '',
       phoneNo: '',
+      status: 'available',
       licenseNo: '',
       licenseExpiryDate: '',
-      status: 'active',
       image: {}
     })
   }
@@ -170,7 +170,7 @@ function CreateDriverModal ({ isOpen, onClose, onCreate }) {
 
               <form
                 onSubmit={handleSubmit}
-                className='mt-4 grid grid-cols-3 gap-x-6 gap-y-4'
+                className='mt-4 grid grid-cols-2 gap-x-6 gap-y-4'
               >
                 <InputField
                   label='Firstname'
@@ -210,25 +210,6 @@ function CreateDriverModal ({ isOpen, onClose, onCreate }) {
                   onChange={handleChange}
                   isUppercase={true}
                 />
-
-                <label className='flex flex-col gap-1'>
-                  <span className='uppercase text-xs text-gray-500 font-semibold'>
-                    Status
-                  </span>
-                  <div className='relative'>
-                    <select
-                      name='status'
-                      value={formData.status}
-                      onChange={handleChange}
-                      required
-                      className='outline outline-gray-300 px-3 py-2 rounded focus:outline-2 focus:outline-gray-400 appearance-none w-full'
-                    >
-                      <option value='active'>Active</option>
-                      <option value='inactive'>Inactive</option>
-                    </select>
-                    <MdKeyboardArrowDown className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-lg' />
-                  </div>
-                </label>
 
                 <div className='mt-12 col-span-full'>
                   <button

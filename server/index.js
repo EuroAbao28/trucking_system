@@ -34,6 +34,8 @@ app.use('/api/truck', require('./routes/truckRoute'))
 app.use('/api/tool', require('./routes/toolRoute'))
 app.use('/api/deployment', require('./routes/deploymentRoute'))
 app.use('/api/analytics', require('./routes/dashboardRoute'))
+app.use('/api/activity-logs', require('./routes/activityLogRoute'))
+app.use('/api/timeline-logs', require('./routes/timelineRoute'))
 
 // error-handling middleware
 app.use(routeNotFoundHandler)

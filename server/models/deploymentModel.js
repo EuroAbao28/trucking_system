@@ -2,6 +2,11 @@ const mongoose = require('mongoose')
 
 const deploymentSchema = new mongoose.Schema(
   {
+    deploymentCode: {
+      type: String,
+      unique: true,
+      index: true
+    },
     truckId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Truck',
@@ -40,8 +45,6 @@ const deploymentSchema = new mongoose.Schema(
       type: String,
       default: 'preparing'
     },
-
-    // Replacement fields
     replacement: {
       replacementTruckId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -57,8 +60,6 @@ const deploymentSchema = new mongoose.Schema(
       reason: String,
       remarks: String
     },
-
-    // timeline
     departed: {
       type: String,
       default: ''
@@ -82,6 +83,45 @@ const deploymentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 )
+
+const counterSchema = new mongoose.Schema({
+  _id: String,
+  seq: Number
+})
+
+const Counter = mongoose.model('Counter', counterSchema)
+
+// Format: DP241200001 (DP + YYMM + 5-digit sequence)
+deploymentSchema.pre('save', async function (next) {
+  if (!this.deploymentCode) {
+    try {
+      const now = new Date()
+      const year = now.getFullYear().toString().slice(-2) // "24"
+      const month = String(now.getMonth() + 1).padStart(2, '0') // "01" to "12"
+
+      const monthKey = `${year}${month}` // "2412" for Dec 2024
+      const counterId = `deployment-${monthKey}`
+
+      const counter = await Counter.findByIdAndUpdate(
+        counterId,
+        { $inc: { seq: 1 } },
+        { new: true, upsert: true }
+      )
+
+      // Format: DP241200001
+      this.deploymentCode = `DP${monthKey}${String(counter.seq).padStart(
+        5,
+        '0'
+      )}`
+
+      next()
+    } catch (error) {
+      next(error)
+    }
+  } else {
+    next()
+  }
+})
 
 const Deployment = mongoose.model('Deployment', deploymentSchema)
 module.exports = Deployment

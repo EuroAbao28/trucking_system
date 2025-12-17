@@ -12,6 +12,7 @@ import ViewerListPage from './pages/admin/VisitorManagement'
 import AdminManagement from './pages/admin/AdminManagement'
 import LoginPage from './pages/public/LoginPage'
 import SignupPage from './pages/public/SignupPage'
+import TimelineLogs from './pages/admin/TimelineLogs'
 
 function App () {
   return (
@@ -44,6 +45,7 @@ function App () {
         >
           <Route path='/secure/dashboard' element={<Dashboard />} />
           <Route path='/secure/calendar' element={<CalendarPage />} />
+          <Route path='/secure/deployment-logs' element={<TimelineLogs />} />
           <Route path='/secure/deployments' element={<Deployments />} />
 
           <Route

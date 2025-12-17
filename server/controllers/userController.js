@@ -12,6 +12,7 @@ const { uploadImageToCloudinary } = require('../utils/cloudinaryUtils')
 const User = require('../models/userModel')
 const { cloudinary } = require('../middlewares/multerCloudinary')
 const sendStatusEmail = require('../utils/emailService')
+const ActivityLog = require('../models/activityLogsModel')
 
 // create user
 const createUser = async (req, res, next) => {
@@ -130,6 +131,14 @@ const createUser = async (req, res, next) => {
     const userWithoutPassword = newUser.toObject()
     delete userWithoutPassword.password
 
+    // create activity log
+    await ActivityLog.create({
+      type: 'visitor',
+      performedBy: newUser._id,
+      action: 'Account registration request submitted',
+      targetUser: newUser._id
+    })
+
     return res.status(201).json({
       message: 'User created successfully',
       user: userWithoutPassword
@@ -155,6 +164,15 @@ const createAdmin = async (req, res, next) => {
     } = req.body
 
     console.log(req.body)
+
+    // Check permissions
+    if (req.user.role !== 'head_admin' && req.user.role !== 'admin') {
+      return next(createError(403, 'Access denied'))
+    }
+
+    if (req.user.role === 'admin' && existingUser.role === 'admin') {
+      return next(createError(403, 'Access denied'))
+    }
 
     // validate fields
     validateFields({
@@ -254,6 +272,14 @@ const createAdmin = async (req, res, next) => {
     const userWithoutPassword = newUser.toObject()
     delete userWithoutPassword.password
 
+    // create activity log
+    await ActivityLog.create({
+      type: 'admin',
+      performedBy: req.user._id,
+      action: 'Created an admin account',
+      targetUser: newUser._id
+    })
+
     return res.status(201).json({
       message: 'User created successfully',
       user: userWithoutPassword
@@ -314,6 +340,14 @@ const loginUser = async (req, res, next) => {
       { expiresIn: '1d' }
     )
 
+    // create activity log
+    await ActivityLog.create({
+      type: user.role === 'visitor' ? 'visitor' : 'admin',
+      performedBy: user._id,
+      action: 'Logged in to the system',
+      targetUser: user._id
+    })
+
     res.status(200).json({
       message: 'Login successful',
       token,
@@ -340,6 +374,14 @@ const loginUser = async (req, res, next) => {
 // logout user
 const logoutUser = async (req, res, next) => {
   try {
+    // create activity log
+    await ActivityLog.create({
+      type: req.user.role === 'visitor' ? 'visitor' : 'admin',
+      performedBy: req.user._id,
+      action: 'Logged out to the system',
+      targetUser: req.user._id
+    })
+
     res.status(200).json({
       message: 'Logged out successfully'
     })
@@ -503,8 +545,30 @@ const updateUser = async (req, res, next) => {
       }
     }
 
+    // Track which fields are being updated for activity log
+    const updatedFields = []
+    if (firstname && firstname !== existingUser.firstname)
+      updatedFields.push('firstname')
+    if (lastname && lastname !== existingUser.lastname)
+      updatedFields.push('lastname')
+    if (email && email !== existingUser.email) updatedFields.push('email')
+    if (phoneNo && phoneNo !== existingUser.phoneNo)
+      updatedFields.push('phone number')
+    if (status && status !== existingUser.status) updatedFields.push('status')
+    if (role && role !== existingUser.role) updatedFields.push('role')
+    if (req.file) updatedFields.push('profile picture')
+
+    const actionMessage =
+      updatedFields.length > 0
+        ? `Updated ${
+            existingUser.role === 'admin' ? "admin's" : "visitor's"
+          } ${updatedFields.join(', ')}`
+        : `Updated ${
+            existingUser.role === 'admin' ? 'admin' : 'visitor'
+          } details`
+
     // update fields
-    const updatedFields = {
+    const updatedFieldsData = {
       firstname: firstname || existingUser.firstname,
       middlename: middlename || existingUser.middlename,
       lastname: lastname || existingUser.lastname,
@@ -516,7 +580,7 @@ const updateUser = async (req, res, next) => {
       imagePublicId
     }
 
-    Object.assign(existingUser, updatedFields)
+    Object.assign(existingUser, updatedFieldsData)
     await existingUser.save()
 
     // Send email notification if status was changed
@@ -541,6 +605,14 @@ const updateUser = async (req, res, next) => {
         console.error('Error sending status email:', emailError)
       }
     }
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'admin',
+      performedBy: req.user._id,
+      action: actionMessage,
+      targetUser: existingUser._id
+    })
 
     res.status(200).json({
       message: 'User updated successfully',
@@ -599,6 +671,17 @@ const softDeleteUser = async (req, res, next) => {
     user.isSoftDeleted = true
 
     await user.save()
+
+    // create activity log
+    await ActivityLog.create({
+      type: 'admin',
+      performedBy: req.user._id,
+      action:
+        user.role === 'admin'
+          ? 'Deleted an admin account'
+          : 'Deleted a visitor account',
+      targetUser: user._id
+    })
 
     res.status(200).json({
       success: true,

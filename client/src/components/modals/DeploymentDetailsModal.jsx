@@ -21,9 +21,10 @@ import { useEffect, useState } from 'react'
 import { FaPen, FaSave, FaTrash, FaUserEdit } from 'react-icons/fa'
 import { DateTime } from 'luxon'
 import useUpdateDeployment from '../../hooks/useUpdateDeployment'
-import toast from 'react-hot-toast'
+import { toast } from 'react-toastify'
 import { HiDotsHorizontal } from 'react-icons/hi'
 import { NumericFormat } from 'react-number-format'
+import { LuClock } from 'react-icons/lu'
 
 function DeploymentDetailsModal ({
   isOpen,
@@ -556,8 +557,21 @@ function DeploymentDetailsModal ({
                           }
                         )}
                       ></div>
+                      <div
+                        className={clsx(
+                          'w-0.5 h-full absolute top-0 left-1/2 -translate-x-1/2',
+                          {
+                            'bg-emerald-500': isEditMode
+                              ? editForm.destDeparture?.trim()
+                              : deployment.destDeparture?.trim(),
+                            'bg-gray-300 shadow-inner': isEditMode
+                              ? !editForm.destDeparture?.trim()
+                              : !deployment.destDeparture?.trim()
+                          }
+                        )}
+                      ></div>
                     </div>
-                    <div className='flex-1 w-56'>
+                    <div className='pb-8 flex-1 w-56'>
                       {isEditMode ? (
                         <InputField
                           label='Dest Departure'
@@ -592,12 +606,86 @@ function DeploymentDetailsModal ({
                       )}
                     </div>
                   </div>
+
+                  {/* unloading time */}
+                  <div className='flex gap-5'>
+                    <div className='relative'>
+                      <div
+                        className={clsx(
+                          'w-4 aspect-square rounded-full absolute z-10 left-1/2 -translate-x-1/2',
+                          {
+                            'bg-emerald-500 shadow-warning': isEditMode
+                              ? editForm.destDeparture?.trim()
+                              : deployment.destDeparture?.trim(),
+                            'bg-gray-200 shadow-[inset_0_2px_4px_0_rgb(0,0,0,0.2)]':
+                              isEditMode
+                                ? !editForm.destDeparture?.trim()
+                                : !deployment.destDeparture?.trim()
+                          }
+                        )}
+                      ></div>
+                    </div>
+                    <div className='flex-1 w-56'>
+                      <label className='flex flex-col gap-1'>
+                        <p className='text-xs font-semibold uppercase text-gray-500'>
+                          Unloading Time
+                        </p>
+                        {isEditMode ? (
+                          editForm?.destDeparture && editForm?.destArrival ? (
+                            <div className='outline outline-gray-300 px-3 py-2 rounded break-all focus:outline-gray-400 flex items-center gap-2'>
+                              <LuClock />
+                              {(() => {
+                                const { hours, minutes } = DateTime.fromISO(
+                                  editForm.destDeparture
+                                ).diff(DateTime.fromISO(editForm.destArrival), [
+                                  'hours',
+                                  'minutes'
+                                ])
+                                return hours
+                                  ? `${hours}h ${Math.floor(minutes)}m`
+                                  : `${Math.floor(minutes)}m`
+                              })()}
+                            </div>
+                          ) : (
+                            <p className='italic text-gray-400 text-sm font-light outline outline-gray-300 px-3 py-2.5 rounded break-all focus:outline-gray-400'>
+                              Pending
+                            </p>
+                          )
+                        ) : deployment?.destDeparture &&
+                          deployment?.destArrival ? (
+                          <div className='outline outline-gray-300 px-3 py-2 rounded break-all focus:outline-gray-400 flex items-center gap-2'>
+                            <LuClock />
+                            {(() => {
+                              const { hours, minutes } = DateTime.fromISO(
+                                deployment.destDeparture
+                              ).diff(DateTime.fromISO(deployment.destArrival), [
+                                'hours',
+                                'minutes'
+                              ])
+                              return hours
+                                ? `${hours}h ${Math.floor(minutes)}m`
+                                : `${Math.floor(minutes)}m`
+                            })()}
+                          </div>
+                        ) : (
+                          <p className='italic text-gray-400 text-sm font-light outline outline-gray-300 px-3 py-2.5 rounded break-all focus:outline-gray-400'>
+                            Pending
+                          </p>
+                        )}
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* deployment details */}
               <div className='px-6 py-8 flex-1 flex flex-col'>
-                <h2 className='text-lg font-semibold'>Deployment Details</h2>
+                <div className='flex items-center gap-3'>
+                  <h2 className='text-lg font-semibold'>Deployment Details</h2>
+                  <p className='bg-gray-100 px-2 py-1 rounded-md shadow-card3 text-sm font-medium'>
+                    #{editForm?.deploymentCode}
+                  </p>
+                </div>
 
                 {!isReplacementShow ? (
                   // Original truck details
@@ -1161,12 +1249,11 @@ function DeploymentDetailsModal ({
                       </p>
                     </label>
 
-                    <div className='grid grid-cols-2 gap-6'>
+                    <div className='grid grid-cols-3 gap-6'>
                       <InputField
                         label='Sacks Count'
                         type='number'
                         name='sacksCount'
-                        placeholder='Sacks Count'
                         value={editForm?.sacksCount}
                         disabled={!isEditMode}
                         onChange={handleChange}
@@ -1176,10 +1263,9 @@ function DeploymentDetailsModal ({
                       />
 
                       <InputField
-                        label='Load Weight (kg)'
+                        label='Load Weight'
                         type='number'
                         name='loadWeightKg'
-                        placeholder='Weight (kg)'
                         value={editForm?.loadWeightKg}
                         disabled={!isEditMode}
                         onChange={handleChange}
@@ -1187,6 +1273,33 @@ function DeploymentDetailsModal ({
                         thousandSeparator={true}
                         decimalScale={0}
                       />
+
+                      <label className='flex flex-col gap-1'>
+                        <span className='uppercase text-xs text-gray-500 font-semibold'>
+                          Unloading
+                        </span>
+                        <p className='outline outline-gray-200 px-3 py-2 rounded break-all focus:outline-gray-400 text-nowrap'>
+                          {(() => {
+                            if (
+                              !editForm?.destDeparture ||
+                              !editForm?.destArrival
+                            ) {
+                              return <span className='text-gray-500'>N/A</span>
+                            }
+
+                            const { hours, minutes } = DateTime.fromISO(
+                              editForm?.destDeparture
+                            ).diff(DateTime.fromISO(editForm?.destArrival), [
+                              'hours',
+                              'minutes'
+                            ])
+
+                            return hours
+                              ? `${hours}h ${Math.floor(minutes)}m`
+                              : `${Math.floor(minutes)}m`
+                          })()}
+                        </p>
+                      </label>
                     </div>
 
                     <InputField
@@ -1313,7 +1426,7 @@ const InputField = ({
   if (formatNumber && type === 'number') {
     return (
       <label className={`col-span-${colSpan} flex flex-col gap-1`}>
-        <span className='uppercase text-xs text-gray-500 font-semibold'>
+        <span className='uppercase text-xs text-gray-500 font-semibold text-nowrap'>
           {label}
         </span>
         <NumericFormat

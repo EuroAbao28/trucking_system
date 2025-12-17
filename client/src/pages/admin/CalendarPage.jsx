@@ -1,24 +1,23 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import { API_DEPLOYMENT } from '../../utils/APIRoutes'
-import { error_illustration } from '../../consts/images'
 import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md'
 import {
   FaBoxOpen,
   FaCheckCircle,
   FaFlagCheckered,
   FaTruck,
-  FaWarehouse
+  FaWarehouse,
+  FaClock,
+  FaTimesCircle
 } from 'react-icons/fa'
 import DeploymentDetailsModal from '../../components/modals/DeploymentDetailsModal'
-import useGetAllDeployment from '../../hooks/useGetAllDeployment'
 import useGetAllTruck from '../../hooks/useGetAllTruck'
 import useGetAllDriver from '../../hooks/useGetAllDriver'
 import ReplacementHistoryModal from '../../components/modals/ReplacementHistoryModal'
-import ReplacementModal from '../../components/modals/ReplacementModal'
+import useGetAllDeployment from '../../hooks/useGetAllDeployment'
+import { error_illustration } from '../../consts/images'
 
 function CalendarPage () {
-  const { getAllDeploymentFunction, isLoading: isDeploymentLoading } =
+  const { getAllDeploymentFunction, isLoading: isDeploymentsLoading } =
     useGetAllDeployment()
   const { getAllTruckFunction, isLoading: isTruckLoading } = useGetAllTruck()
   const { getAllDriverFunction, isLoading: isDriverLoading } = useGetAllDriver()
@@ -26,7 +25,7 @@ function CalendarPage () {
   const [allDeployments, setAllDeployments] = useState([])
   const [allTrucks, setAllTrucks] = useState([])
   const [allDrivers, setAllDrivers] = useState([])
-  const [deploymentError, setDeploymentError] = useState(null)
+  const [deploymentsError, setDeploymentsError] = useState(null)
   const [truckError, setTruckError] = useState(null)
   const [driverError, setDriverError] = useState(null)
 
@@ -39,14 +38,15 @@ function CalendarPage () {
   const [showReplacementHistory, setShowReplacementHistory] = useState(false)
 
   useEffect(() => {
-    const handleGetAllDeployment = async () => {
+    const handleGetAllDeployments = async () => {
+      // Fetch all deployments without filters to get everything for the calendar
       const { deployments, total, page, totalPages, error } =
-        await getAllDeploymentFunction()
+        await getAllDeploymentFunction({})
 
       if (error) {
-        setDeploymentError(error)
+        setDeploymentsError(error)
       }
-      setAllDeployments(deployments)
+      setAllDeployments(deployments || [])
     }
 
     const handleGetAllTrucks = async () => {
@@ -67,14 +67,10 @@ function CalendarPage () {
       setAllDrivers(drivers || [])
     }
 
-    handleGetAllDeployment()
+    handleGetAllDeployments()
     handleGetAllTrucks()
     handleGetAllDrivers()
   }, [])
-
-  useEffect(() => {
-    console.log(selectedDeployment)
-  }, [selectedDeployment])
 
   // Handle deployment selection
   const handleDeploymentSelect = deployment => {
@@ -82,114 +78,120 @@ function CalendarPage () {
     setIsDeploymentDetailsModalOpen(true)
   }
 
-  // Get events for calendar - using timeline dates
+  // Create events from deployments based on their timeline fields
   const getCalendarEvents = () => {
     return allDeployments
       .map(deployment => {
         const events = []
-        const truckPlate = getTruckPlate(deployment)
 
-        // Status-based color mapping
-        const statusColors = {
-          preparing: 'bg-orange-500',
-          ongoing: 'bg-emerald-500',
-          completed: 'bg-blue-500',
-          canceled: 'bg-red-500'
-        }
+        // Helper function to create event
+        const createEvent = (timestamp, eventType, title, icon) => {
+          if (!timestamp) return null
 
-        // Get the appropriate color based on deployment status
-        const getEventColor = deployment => {
-          return statusColors[deployment.status] || statusColors.ongoing
-        }
+          const eventDate = new Date(timestamp)
+          if (isNaN(eventDate.getTime())) return null
 
-        // Departure event
-        if (deployment.departed) {
-          events.push({
-            id: `${deployment._id}-departed`,
+          return {
+            id: `${deployment._id}-${eventType}`,
             deploymentId: deployment._id,
-            title: `Departure - ${truckPlate}`,
-            shortTitle: 'Departure',
-            start: new Date(deployment.departed),
-            end: new Date(deployment.departed),
+            title: title,
+            shortTitle: title,
+            deploymentCode: deployment.deploymentCode || '',
+            truckPlate: getTruckPlate(deployment),
+            formattedTime: formatTime(eventDate),
+            start: eventDate,
+            end: eventDate,
+            type: eventType,
+            deployment: deployment,
+            color: getStatusColor(deployment.status),
+            icon: icon,
+            rawTimestamp: timestamp
+          }
+        }
+
+        // Create events for each timeline milestone if they exist
+        const timelineEvents = [
+          {
+            field: 'departed',
             type: 'departed',
-            deployment: deployment,
-            color: getEventColor(deployment), // Use the function here
+            title: 'Departure',
             icon: FaTruck
-          })
-        }
-
-        // Pickup In event
-        if (deployment.pickupIn) {
-          events.push({
-            id: `${deployment._id}-pickupIn`,
-            deploymentId: deployment._id,
-            title: `Pickup Arrival - ${truckPlate}`,
-            shortTitle: 'Pickup In',
-            start: new Date(deployment.pickupIn),
-            end: new Date(deployment.pickupIn),
+          },
+          {
+            field: 'pickupIn',
             type: 'pickupIn',
-            deployment: deployment,
-            color: getEventColor(deployment), // Use the function here
+            title: 'Pickup Arrival',
             icon: FaWarehouse
-          })
-        }
-
-        // Pickup Out event
-        if (deployment.pickupOut) {
-          events.push({
-            id: `${deployment._id}-pickupOut`,
-            deploymentId: deployment._id,
-            title: `Pickup Departure - ${truckPlate}`,
-            shortTitle: 'Pickup Out',
-            start: new Date(deployment.pickupOut),
-            end: new Date(deployment.pickupOut),
+          },
+          {
+            field: 'pickupOut',
             type: 'pickupOut',
-            deployment: deployment,
-            color: getEventColor(deployment), // Use the function here
+            title: 'Pickup Departure',
             icon: FaBoxOpen
-          })
-        }
-
-        // Destination Arrival event
-        if (deployment.destArrival) {
-          events.push({
-            id: `${deployment._id}-destArrival`,
-            deploymentId: deployment._id,
-            title: `Destination Arrival - ${truckPlate}`,
-            shortTitle: 'Dest Arrival',
-            start: new Date(deployment.destArrival),
-            end: new Date(deployment.destArrival),
+          },
+          {
+            field: 'destArrival',
             type: 'destArrival',
-            deployment: deployment,
-            color: getEventColor(deployment), // Use the function here
+            title: 'Destination Arrival',
             icon: FaFlagCheckered
-          })
-        }
-
-        // Destination Departure event
-        if (deployment.destDeparture) {
-          events.push({
-            id: `${deployment._id}-destDeparture`,
-            deploymentId: deployment._id,
-            title: `Delivery Completed - ${truckPlate}`,
-            shortTitle: 'Completed',
-            start: new Date(deployment.destDeparture),
-            end: new Date(deployment.destDeparture),
+          },
+          {
+            field: 'destDeparture',
             type: 'destDeparture',
-            deployment: deployment,
-            color: getEventColor(deployment), // Use the function here
+            title: 'Delivery Completed',
             icon: FaCheckCircle
-          })
-        }
+          }
+        ]
+
+        timelineEvents.forEach(({ field, type, title, icon }) => {
+          if (deployment[field]) {
+            const event = createEvent(deployment[field], type, title, icon)
+            if (event) events.push(event)
+          }
+        })
+
+        // Also create an event for deployment creation/status
+        const createdEvent = createEvent(
+          deployment.createdAt,
+          'created',
+          `Deployment ${
+            deployment.status === 'canceled' ? 'Canceled' : 'Created'
+          }`,
+          deployment.status === 'canceled' ? FaTimesCircle : FaClock
+        )
+        if (createdEvent) events.push(createdEvent)
 
         return events
       })
       .flat()
+      .filter(event => event !== null)
       .sort((a, b) => a.start - b.start)
+  }
+
+  // Helper function to format time
+  const formatTime = date => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
+  // Status-based color mapping
+  const getStatusColor = status => {
+    const statusColors = {
+      preparing: 'bg-orange-500',
+      ongoing: 'bg-emerald-500',
+      completed: 'bg-blue-500',
+      canceled: 'bg-red-500'
+    }
+    return statusColors[status] || statusColors.ongoing
   }
 
   // Helper function to get truck plate number (converted to uppercase)
   const getTruckPlate = deployment => {
+    if (!deployment) return 'UNKNOWN TRUCK'
+
     if (deployment.replacement?.replacementTruckId?.plateNo) {
       return deployment.replacement.replacementTruckId.plateNo.toUpperCase()
     }
@@ -198,6 +200,8 @@ function CalendarPage () {
 
   // Helper function to get driver name
   const getDriverName = deployment => {
+    if (!deployment) return 'Unknown Driver'
+
     if (deployment.replacement?.replacementDriverId) {
       const driver = deployment.replacement.replacementDriverId
       return `${driver.firstname} ${driver.lastname}`
@@ -274,7 +278,7 @@ function CalendarPage () {
     )} - ${endOfWeek.toLocaleDateString('en-US', formatOptions)}`
   }
 
-  // Updated renderMonthView to use short titles
+  // Updated renderMonthView with time, deployment code, and truck/event
   const renderMonthView = () => {
     const daysInMonth = getDaysInMonth(currentDate)
     const firstDayOfMonth = getFirstDayOfMonth(currentDate)
@@ -308,7 +312,7 @@ function CalendarPage () {
       days.push(
         <div
           key={day}
-          className={`min-h-32 p-2 border border-gray-200 transition-colors cursor-pointer ${
+          className={`min-h-32 border border-gray-200 transition-colors cursor-pointer ${
             isToday
               ? 'bg-blue-50 ring-1 ring-blue-200'
               : 'bg-white hover:bg-gray-50'
@@ -323,22 +327,35 @@ function CalendarPage () {
             {day}
           </div>
           <div
-            className='space-y-1 max-h-48 overflow-y-auto'
+            className='space-y-1 max-h-48 overflow-y-auto px-1'
             onClick={e => e.stopPropagation()}
           >
             {dayEvents.map(event => (
               <div
                 key={event.id}
-                className={`${event.color} text-white text-xs p-2 rounded cursor-pointer truncate hover:opacity-80 transition-opacity`}
+                className={`${event.color} text-white text-xs p-2 rounded cursor-pointer hover:brightness-95 transition-opacity space-y-1`}
                 onClick={() => handleDeploymentSelect(event.deployment)}
-                title={`${getTruckPlate(event.deployment)} - ${
+                title={`${event.deploymentCode} - ${event.truckPlate} - ${
                   event.shortTitle
                 } at ${event.start.toLocaleTimeString('en-US', {
                   hour: '2-digit',
                   minute: '2-digit'
-                })} `}
+                })}`}
               >
-                {getTruckPlate(event.deployment)} - {event.shortTitle}
+                {/* Time and Deployment Code in one line */}
+                <div className='flex items-center justify-between gap-1'>
+                  <div className='text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full'>
+                    {event.deploymentCode}
+                  </div>
+                  <div className='text-xs font-medium opacity-90'>
+                    {event.formattedTime}
+                  </div>
+                </div>
+
+                {/* Truck plate and event type on new line */}
+                <div className='text-xs truncate'>
+                  {event.truckPlate} - {event.shortTitle}
+                </div>
               </div>
             ))}
           </div>
@@ -349,7 +366,7 @@ function CalendarPage () {
     return days
   }
 
-  // Updated renderWeekView to show more events
+  // Updated renderWeekView with time, deployment code, and truck/event
   const renderWeekView = () => {
     const startOfWeek = new Date(currentDate)
     startOfWeek.setDate(currentDate.getDate() - currentDate.getDay())
@@ -392,30 +409,35 @@ function CalendarPage () {
 
           {/* items */}
           <div
-            className='space-y-2 relative overflow-y-auto  flex-1'
+            className='space-y-2 relative overflow-y-auto flex-1'
             onClick={e => e.stopPropagation()}
           >
             <div className='absolute inset-0 p-2 flex flex-col gap-2'>
               {dayEvents.map(event => (
                 <div
                   key={event.id}
-                  className={`${event.color} text-white p-2 rounded cursor-pointer text-sm hover:opacity-80 transition-opacity`}
+                  className={`${event.color} text-white p-2 rounded cursor-pointer hover:brightness-95 transition-opacity space-y-1`}
                   onClick={() => handleDeploymentSelect(event.deployment)}
-                  title={`${getTruckPlate(event.deployment)} - ${
+                  title={`${event.deploymentCode} - ${event.truckPlate} - ${
                     event.shortTitle
                   } at ${event.start.toLocaleTimeString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit'
                   })}`}
                 >
-                  <div className='font-medium text-xs opacity-90'>
-                    {event.start.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                  {/* Time and Deployment Code in one line */}
+                  <div className='flex items-center justify-between gap-1'>
+                    <div className='text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full'>
+                      {event.deploymentCode}
+                    </div>
+                    <div className='text-xs font-medium opacity-90'>
+                      {event.formattedTime}
+                    </div>
                   </div>
-                  <div className='truncate'>
-                    {getTruckPlate(event.deployment)} - {event.shortTitle}
+
+                  {/* Truck plate and event type on new line */}
+                  <div className='text-xs truncate'>
+                    {event.truckPlate} - {event.shortTitle}
                   </div>
                 </div>
               ))}
@@ -432,7 +454,7 @@ function CalendarPage () {
     })
   }
 
-  // Render day view
+  // Render day view with time, deployment code, and truck/event
   const renderDayView = () => {
     const events = getCalendarEvents().filter(
       event => event.start.toDateString() === currentDate.toDateString()
@@ -442,7 +464,7 @@ function CalendarPage () {
       <div className='flex-1 overflow-y-scroll relative'>
         {events.length === 0 ? (
           <div className='text-center text-gray-500 py-8 italic'>
-            No deployments scheduled for this day
+            No deployment events for this day
           </div>
         ) : (
           <div className='space-y-3 absolute top-0 left-0 right-0'>
@@ -463,22 +485,29 @@ function CalendarPage () {
                 onClick={() => handleDeploymentSelect(event.deployment)}
               >
                 <div className='flex items-start space-x-4'>
-                  <div className='text-sm min-w-20'>
-                    {event.start.toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                  <div className='text-sm min-w-20 font-medium'>
+                    {event.formattedTime}
                   </div>
                   <div className='flex-1'>
-                    <div className='font-semibold text-gray-800 mb-1'>
-                      {getTruckPlate(event.deployment)} - {event.shortTitle}
+                    {/* Deployment Code and details */}
+                    <div className='flex items-center gap-2 mb-1'>
+                      <div className='text-xs font-medium bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full'>
+                        {event.deploymentCode}
+                      </div>
+                      <div className='font-semibold text-gray-800'>
+                        {event.truckPlate} - {event.shortTitle}
+                      </div>
                     </div>
+
                     <div className='text-sm text-gray-600 capitalize'>
-                      {event.deployment.pickupSite} →{' '}
-                      {event.deployment.destination}
+                      {event.deployment?.pickupSite} →{' '}
+                      {event.deployment?.destination}
                     </div>
                     <div className='text-sm text-gray-500 mt-1 capitalize'>
                       Driver: {getDriverName(event.deployment)}
+                    </div>
+                    <div className='text-sm text-gray-500 capitalize'>
+                      Status: {event.deployment?.status}
                     </div>
                   </div>
                 </div>
@@ -491,21 +520,21 @@ function CalendarPage () {
   }
 
   // Loading state
-  if (isDeploymentLoading || isDriverLoading || isTruckLoading) {
+  if (isDeploymentsLoading || isDriverLoading || isTruckLoading) {
     return (
       <div className='flex-1 flex items-center justify-center'>
         <div className='flex flex-col items-center justify-center gap-4 text-center'>
           <div className='relative'>
             <span className='loading loading-spinner loading-lg text-emerald-500'></span>
           </div>
-          <p className='text-gray-600 font-medium'>Loading content...</p>
+          <p className='text-gray-600 font-medium'>Loading deployments...</p>
         </div>
       </div>
     )
   }
 
   // Error state
-  if (deploymentError || truckError || driverError) {
+  if (deploymentsError || truckError || driverError) {
     return (
       <div className='flex-1 flex justify-center items-center'>
         <div className='flex flex-col justify-center items-center gap-4 px-4 text-center'>

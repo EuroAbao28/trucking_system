@@ -48,24 +48,8 @@ function TruckManagement () {
   const [error, setError] = useState(null)
   const [selectedTruck, setSelectedTruck] = useState({})
 
-  const [filters, setFilters] = useState({
-    truckType: '',
-    condition: '',
-    status: '',
-    sort: 'latest',
-    search: '',
-    perPage: 40,
-    page: 1
-  })
-  const [tempFilters, setTempFilters] = useState({
-    truckType: '',
-    condition: '',
-    status: '',
-    sort: 'latest',
-    search: '',
-    perPage: 40,
-    page: 1
-  })
+  const [filters, setFilters] = useState(defaultFilters)
+  const [tempFilters, setTempFilters] = useState(defaultFilters)
 
   const handleChangeFilter = e => {
     const { name, value } = e.target
@@ -127,7 +111,7 @@ function TruckManagement () {
 
   const handleAddNewTruck = newTruck => {
     console.log('NEW TRUCK', newTruck)
-    setAllTrucks(prev => [...prev, newTruck])
+    setAllTrucks(prev => [newTruck, ...prev])
   }
 
   useEffect(() => {
@@ -321,7 +305,7 @@ function TruckManagement () {
             <button
               onClick={() => setIsCreateTruckModalOpen(true)}
               disabled={isLoading}
-              className='flex items-center gap-4 bg-primaryColor text-white rounded px-3 py-1 cursor-pointer active:scale-95 transition-all hover:brightness-95'
+              className='flex items-center gap-4 bg-linear-to-b from-emerald-500 to-emerald-600 text-white rounded px-3 py-1 cursor-pointer active:scale-95 transition-all hover:brightness-95'
             >
               <FaPlus className='text-sm' />
               <p>Create New</p>
@@ -382,9 +366,7 @@ function TruckManagement () {
                     <td>Image</td>
                     <td>Plate No.</td>
                     <td>Type</td>
-                    <td>Condition</td>
                     <td>Status</td>
-                    <td>Equipped Tools</td>
                   </tr>
                 </thead>
                 <tbody>
@@ -417,23 +399,6 @@ function TruckManagement () {
                             'rounded-full px-2 w-fit capitalize text-xs py-0.5',
                             {
                               'bg-emerald-500/10 text-emerald-500':
-                                truck.condition === 'good',
-                              'bg-orange-500/10 text-orange-500':
-                                truck.condition === 'maintenance-required',
-                              'bg-red-500/10 text-red-500':
-                                truck.condition === 'under-maintenance'
-                            }
-                          )}
-                        >
-                          {truck.condition}
-                        </div>
-                      </td>
-                      <td>
-                        <div
-                          className={clsx(
-                            'rounded-full px-2 w-fit capitalize text-xs py-0.5',
-                            {
-                              'bg-emerald-500/10 text-emerald-500':
                                 truck.status === 'available',
                               'bg-blue-500/10 text-blue-500':
                                 truck.status === 'deployed',
@@ -443,29 +408,6 @@ function TruckManagement () {
                           )}
                         >
                           {truck.status}
-                        </div>
-                      </td>
-                      <td className='py-0'>
-                        <div className='text-xs text-gray-600'>
-                          {truck.tools && truck.tools.length > 0 ? (
-                            <div className='flex flex-col gap-0.5'>
-                              <span className='font-medium'>
-                                {truck.tools.length}{' '}
-                                {truck.tools.length === 1 ? 'type' : 'types'}
-                              </span>
-                              <span className='text-gray-500'>
-                                {truck.tools.reduce(
-                                  (total, tool) => total + tool.quantity,
-                                  0
-                                )}{' '}
-                                total tools
-                              </span>
-                            </div>
-                          ) : (
-                            <span className='text-gray-400 italic'>
-                              No tools
-                            </span>
-                          )}
                         </div>
                       </td>
                     </tr>

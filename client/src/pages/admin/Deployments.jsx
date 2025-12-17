@@ -363,6 +363,7 @@ function Deployments () {
                 <thead>
                   <tr className='bg-white border-b border-gray-200  text-gray-800'>
                     <td>{total}</td>
+                    <td>Code</td>
                     <td>Truck Details</td>
                     <td>Destination</td>
                     <td>Status</td>
@@ -384,6 +385,8 @@ function Deployments () {
                       <td className='text-xs font-bold text-gray-600'>
                         {(filters.page - 1) * filters.perPage + index + 1}
                       </td>
+
+                      <td>{deployment.deploymentCode}</td>
 
                       <td>
                         <div className='space-y-1'>
@@ -414,7 +417,7 @@ function Deployments () {
                         </div>
                       </td>
 
-                      <td className='min-w-48'>{deployment.destination}</td>
+                      <td className='max-w-28'>{deployment.destination}</td>
 
                       <td>
                         <div
@@ -525,28 +528,17 @@ function Deployments () {
 
                       <td>
                         {deployment.destArrival && deployment.destDeparture ? (
-                          <div className='text-nowrap w-fit px-2 py-1 rounded-full'>
+                          <div className='text-nowrap w-fit px-3 py-1 rounded-full bg-emerald-500 text-white'>
                             {(() => {
-                              const arrivalTime = DateTime.fromISO(
-                                deployment.destArrival
-                              )
-                              const departureTime = DateTime.fromISO(
+                              const { hours, minutes } = DateTime.fromISO(
                                 deployment.destDeparture
-                              )
-                              const duration = departureTime.diff(arrivalTime, [
+                              ).diff(DateTime.fromISO(deployment.destArrival), [
                                 'hours',
                                 'minutes'
                               ])
-
-                              // Format the duration
-                              const hours = duration.hours
-                              const minutes = Math.floor(duration.minutes)
-
-                              if (hours > 0) {
-                                return `${hours}h ${minutes}m`
-                              } else {
-                                return `${minutes}m`
-                              }
+                              return hours
+                                ? `${hours}h ${Math.floor(minutes)}m`
+                                : `${Math.floor(minutes)}m`
                             })()}
                           </div>
                         ) : deployment.status === 'canceled' ? (

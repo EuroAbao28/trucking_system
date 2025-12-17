@@ -276,49 +276,6 @@ function TruckDetailsModal ({
                     )}
                   </label>
 
-                  {/* condition */}
-                  <label className='flex flex-col gap-1'>
-                    <span className='uppercase text-xs text-gray-500 font-semibold'>
-                      Condition
-                    </span>
-
-                    {isEditMode ? (
-                      <div className='relative'>
-                        <select
-                          name='condition'
-                          value={editForm?.condition}
-                          onChange={handleChange}
-                          className='outline outline-gray-200 px-3 py-2 rounded focus:outline-gray-400 appearance-none w-full capitalize'
-                        >
-                          {TRUCK_CONDITIONS.map((item, index) => (
-                            <option key={index} value={item.value}>
-                              {item.label}
-                            </option>
-                          ))}
-                        </select>
-                        <MdKeyboardArrowDown className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-lg' />
-                      </div>
-                    ) : (
-                      <div className='outline outline-gray-200 px-3 py-2 rounded'>
-                        <p
-                          className={clsx(
-                            'capitalize w-fit px-2 py-0.5 rounded-full text-sm font-medium',
-                            {
-                              'bg-emerald-500/10 text-emerald-500':
-                                editForm?.condition === 'good',
-                              'bg-orange-500/10 text-orange-500':
-                                editForm?.condition === 'maintenance-required',
-                              'bg-red-500/10 text-red-500':
-                                editForm?.condition === 'under-maintenance'
-                            }
-                          )}
-                        >
-                          {editForm?.condition}
-                        </p>
-                      </div>
-                    )}
-                  </label>
-
                   {/* status */}
                   <label className='flex flex-col gap-1'>
                     <span className='uppercase text-xs text-gray-500 font-semibold'>
@@ -359,59 +316,6 @@ function TruckDetailsModal ({
                       </div>
                     )}
                   </label>
-
-                  {/* Tools Section */}
-                  <div className='col-span-full flex flex-col gap-1'>
-                    <label className='uppercase text-xs text-gray-500 font-semibold'>
-                      Tool Selection
-                    </label>
-                    <div className='outline outline-gray-300 p-2 rounded grid grid-cols-3 gap-2 max-h-38.5 overflow-y-auto'>
-                      {TRUCK_TOOLS.map((tool, index) => {
-                        const isSelected = isToolSelected(tool)
-                        const quantity = getToolQuantity(tool)
-
-                        return (
-                          <label
-                            key={index}
-                            className={clsx(
-                              'flex items-center gap-3 p-2 border border-gray-200 rounded bg-gray-50',
-                              {
-                                'cursor-pointer': isEditMode
-                              }
-                            )}
-                          >
-                            <input
-                              type='checkbox'
-                              name='tools'
-                              value={tool}
-                              onChange={handleToolChange}
-                              checked={isSelected}
-                              disabled={!isEditMode}
-                              className='w-4 h-4'
-                            />
-                            <span className='text-sm capitalize text-nowrap truncate flex-1'>
-                              {tool.toLowerCase()}
-                            </span>
-
-                            {/* Quantity input - only show when selected and in edit mode */}
-                            {isSelected && (
-                              <input
-                                type='number'
-                                min='1'
-                                value={quantity}
-                                disabled={!isEditMode}
-                                onChange={e =>
-                                  handleQuantityChange(tool, e.target.value)
-                                }
-                                className='text-sm capitalize text-nowrap truncate outline outline-gray-200 text-center w-12 rounded-xs bg-white'
-                                placeholder='Qty'
-                              />
-                            )}
-                          </label>
-                        )
-                      })}
-                    </div>
-                  </div>
 
                   <div className='col-span-full flex gap-6 border-t-2 border-dashed border-gray-100 mt-6 pt-6 transition-all'>
                     <label className='flex flex-col gap-1 flex-1'>
