@@ -386,7 +386,36 @@ function Deployments () {
                         {(filters.page - 1) * filters.perPage + index + 1}
                       </td>
 
-                      <td>{deployment.deploymentCode}</td>
+                      <td className='p-0 relative'>
+                        <div
+                          className='cursor-copy h-full w-fit p-2 hover:bg-gray-100 transition-colors rounded relative group'
+                          onClick={e => {
+                            e.stopPropagation()
+                            navigator.clipboard.writeText(
+                              deployment.deploymentCode
+                            )
+
+                            // Show feedback tooltip
+                            const div = e.currentTarget
+                            const tooltip = document.createElement('div')
+                            tooltip.className =
+                              'absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50'
+                            tooltip.textContent = 'Copied'
+
+                            div.appendChild(tooltip)
+
+                            // Remove after 1 second
+                            setTimeout(() => {
+                              if (div.contains(tooltip)) {
+                                div.removeChild(tooltip)
+                              }
+                            }, 1000)
+                          }}
+                          title='Click to copy'
+                        >
+                          {deployment.deploymentCode}
+                        </div>
+                      </td>
 
                       <td>
                         <div className='space-y-1'>

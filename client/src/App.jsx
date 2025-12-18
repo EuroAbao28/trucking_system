@@ -13,12 +13,13 @@ import AdminManagement from './pages/admin/AdminManagement'
 import LoginPage from './pages/public/LoginPage'
 import SignupPage from './pages/public/SignupPage'
 import TimelineLogs from './pages/admin/TimelineLogs'
+import MyProfile from './pages/admin/MyProfile'
 
 function App () {
   return (
     <>
       <ToastContainer
-        position='top-right'
+        position='bottom-right'
         autoClose={4000}
         hideProgressBar={false}
         newestOnTop={false}
@@ -43,6 +44,8 @@ function App () {
             </UserProvider>
           }
         >
+          <Route path='/secure/my-profile' element={<MyProfile />} />
+
           <Route path='/secure/dashboard' element={<Dashboard />} />
           <Route path='/secure/calendar' element={<CalendarPage />} />
           <Route path='/secure/deployment-logs' element={<TimelineLogs />} />

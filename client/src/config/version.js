@@ -4,7 +4,7 @@ const philippinesYear = DateTime.now().setZone('Asia/Manila').year
 
 const APP_CONFIG = {
   version: '1.0.0',
-  name: "Yza's Agricultural Services",
+  name: 'EBUN FREIGHT INC.',
   year: philippinesYear
 }
 

@@ -41,7 +41,7 @@ function TopBar () {
           >
             <li>
               <Link
-                to='/admin/my-profile'
+                to='/secure/my-profile'
                 className='flex gap-3 items-center px-6 py-3 hover:bg-gray-50 rounded-sm'
               >
                 <TbUserSquareRounded className='text-xl' />

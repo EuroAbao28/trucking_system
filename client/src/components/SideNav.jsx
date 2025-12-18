@@ -59,10 +59,10 @@ function SideNav () {
               className={clsx(
                 'flex items-center gap-4 px-6 py-3 active:scale-95 transition-transform rounded-sm',
                 {
-                  'bg-white/10 text-white font-medium':
+                  'bg-white/90 text-primaryColor font-medium':
                     location.pathname === content.path ||
                     location.pathname.includes(content.path),
-                  'hover:brightness-95 text-white/80':
+                  'hover:bg-white/5 text-white/80':
                     !location.pathname === content.path ||
                     !location.pathname.includes(content.path)
                 }

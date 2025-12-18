@@ -214,7 +214,7 @@ function CreateDriverModal ({ isOpen, onClose, onCreate }) {
                 <div className='mt-12 col-span-full'>
                   <button
                     type='submit'
-                    className='bg-primaryColor text-white px-8 py-2 uppercase text-sm font-semibold rounded flex items-center gap-2 cursor-pointer active:scale-95 transition-all hover:brightness-95'
+                    className='bg-linear-to-b from-emerald-500 to-emerald-600 text-white px-8 py-2 uppercase text-sm font-semibold rounded flex items-center gap-2 cursor-pointer active:scale-95 transition-all hover:brightness-95'
                   >
                     {isLoading ? (
                       <>

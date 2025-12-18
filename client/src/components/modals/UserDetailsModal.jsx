@@ -310,7 +310,9 @@ function UserDetailsModal ({
                   <div className='col-span-full grid grid-cols-2 gap-6 border-t-2 border-dashed border-gray-100 mt-6 pt-6 transition-all'>
                     <label className='flex flex-col gap-1'>
                       <span className='uppercase text-xs text-gray-500 font-semibold'>
-                        Access Request At
+                        {user.role === 'admin' || user.role === 'head_admin'
+                          ? 'Created At'
+                          : 'Access Request At'}
                       </span>
                       <p className='outline outline-gray-200 px-3 py-2 rounded'>
                         {DateTime.fromISO(user.createdAt).toLocaleString(

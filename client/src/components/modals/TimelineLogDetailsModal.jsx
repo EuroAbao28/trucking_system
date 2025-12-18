@@ -156,7 +156,7 @@ function TimelineLogDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       <label className='flex flex-col gap-1'>
                         <p className='text-xs font-semibold uppercase text-gray-500'>
                           Departed
@@ -204,7 +204,7 @@ function TimelineLogDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       <label className='flex flex-col gap-1'>
                         <p className='text-xs font-semibold uppercase text-gray-500'>
                           Pickup-in
@@ -252,7 +252,7 @@ function TimelineLogDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       <label className='flex flex-col gap-1'>
                         <p className='text-xs font-semibold uppercase text-gray-500'>
                           Pickup-out
@@ -300,7 +300,7 @@ function TimelineLogDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       <label className='flex flex-col gap-1'>
                         <p className='text-xs font-semibold uppercase text-gray-500'>
                           Dest Arrival
@@ -336,8 +336,19 @@ function TimelineLogDetailsModal ({
                           }
                         )}
                       ></div>
+                      <div
+                        className={clsx(
+                          'w-0.5 h-full absolute top-0 left-1/2 -translate-x-1/2',
+                          {
+                            'bg-emerald-500 shadow-warning':
+                              timelineDetails?.targetDeployment?.destDeparture?.trim(),
+                            'bg-gray-200 shadow-[inset_0_2px_4px_0_rgb(0,0,0,0.2)]':
+                              !timelineDetails?.targetDeployment?.destDeparture?.trim()
+                          }
+                        )}
+                      ></div>
                     </div>
-                    <div className='flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       <label className='flex flex-col gap-1'>
                         <p className='text-xs font-semibold uppercase text-gray-500'>
                           Dest Departure
@@ -350,6 +361,80 @@ function TimelineLogDetailsModal ({
                               .setZone('Asia/Manila')
                               .toFormat('MMM d, yyyy - hh:mm a')}
                           </p>
+                        ) : (
+                          <p className='italic text-gray-400 text-sm font-light outline outline-gray-300 px-3 py-2.5 rounded break-all focus:outline-gray-400'>
+                            Pending
+                          </p>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className='flex gap-5'>
+                    <div className='relative'>
+                      <div
+                        className={clsx(
+                          'w-4 aspect-square rounded-full absolute z-10 left-1/2 -translate-x-1/2',
+                          {
+                            'bg-emerald-500 shadow-warning': isEditMode
+                              ? timelineDetails?.targetDeployment?.destDeparture?.trim()
+                              : timelineDetails?.targetDeployment?.destDeparture?.trim(),
+                            'bg-gray-200 shadow-[inset_0_2px_4px_0_rgb(0,0,0,0.2)]':
+                              isEditMode
+                                ? !timelineDetails?.targetDeployment?.destDeparture?.trim()
+                                : !timelineDetails?.targetDeployment?.destDeparture?.trim()
+                          }
+                        )}
+                      ></div>
+                    </div>
+                    <div className='flex-1 w-56'>
+                      <label className='flex flex-col gap-1'>
+                        <p className='text-xs font-semibold uppercase text-gray-500'>
+                          Unloading Time
+                        </p>
+                        {isEditMode ? (
+                          timelineDetails?.targetDeployment?.destArrival ? (
+                            <div className='outline outline-gray-300 px-3 py-2 rounded break-all focus:outline-gray-400 flex items-center gap-2'>
+                              <LuClock />
+                              {(() => {
+                                const { hours, minutes } = DateTime.fromISO(
+                                  timelineDetails?.targetDeployment
+                                    ?.destDeparture
+                                ).diff(
+                                  DateTime.fromISO(
+                                    timelineDetails?.targetDeployment
+                                      ?.destArrival
+                                  ),
+                                  ['hours', 'minutes']
+                                )
+                                return hours
+                                  ? `${hours}h ${Math.floor(minutes)}m`
+                                  : `${Math.floor(minutes)}m`
+                              })()}
+                            </div>
+                          ) : (
+                            <p className='italic text-gray-400 text-sm font-light outline outline-gray-300 px-3 py-2.5 rounded break-all focus:outline-gray-400'>
+                              Pending
+                            </p>
+                          )
+                        ) : timelineDetails?.targetDeployment?.destDeparture &&
+                          timelineDetails?.targetDeployment?.destArrival ? (
+                          <div className='outline outline-gray-300 px-3 py-2 rounded break-all focus:outline-gray-400 flex items-center gap-2'>
+                            <LuClock />
+                            {(() => {
+                              const { hours, minutes } = DateTime.fromISO(
+                                timelineDetails?.targetDeployment?.destDeparture
+                              ).diff(
+                                DateTime.fromISO(
+                                  timelineDetails?.targetDeployment?.destArrival
+                                ),
+                                ['hours', 'minutes']
+                              )
+                              return hours
+                                ? `${hours}h ${Math.floor(minutes)}m`
+                                : `${Math.floor(minutes)}m`
+                            })()}
+                          </div>
                         ) : (
                           <p className='italic text-gray-400 text-sm font-light outline outline-gray-300 px-3 py-2.5 rounded break-all focus:outline-gray-400'>
                             Pending
@@ -482,36 +567,18 @@ function TimelineLogDetailsModal ({
                         .toFormat('MMM d, yyyy - hh:mm a')}
                     />
 
-                    <div className='grid grid-cols-3 gap-6'>
+                    <div className='grid grid-cols-2 gap-6'>
                       <StatisField
                         label='Sacks Count'
                         value={timelineDetails?.targetDeployment?.sacksCount}
                         type='number'
                         formatNumber={true}
                       />
-
                       <StatisField
-                        label='Load Weight'
+                        label='Load Weight (kg)'
                         value={timelineDetails?.targetDeployment?.loadWeightKg}
                         type='number'
                         formatNumber={true}
-                      />
-
-                      <StatisField
-                        label='Unloading'
-                        value={(() => {
-                          const { hours, minutes } = DateTime.fromISO(
-                            timelineDetails?.targetDeployment?.destDeparture
-                          ).diff(
-                            DateTime.fromISO(
-                              timelineDetails?.targetDeployment?.destArrival
-                            ),
-                            ['hours', 'minutes']
-                          )
-                          return hours
-                            ? `${hours}h ${Math.floor(minutes)}m`
-                            : `${Math.floor(minutes)}m`
-                        })()}
                       />
                     </div>
 
@@ -608,7 +675,7 @@ const StatisField = ({
         >
           <p
             className={clsx(
-              'capitalize w-fit px-2 py-0.5 rounded-full text-sm font-medium',
+              'capitalize w-fit px-2 py-0.5 rounded-full text-sm',
               {
                 'bg-orange-500/10 text-orange-500': value === 'preparing',
                 'bg-emerald-500/10 text-emerald-500': value === 'ongoing',

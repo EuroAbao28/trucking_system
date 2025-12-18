@@ -303,7 +303,7 @@ function DeploymentDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       {isEditMode ? (
                         <InputField
                           label='Departed'
@@ -370,7 +370,7 @@ function DeploymentDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       {isEditMode ? (
                         <InputField
                           label='Pick-up In'
@@ -437,7 +437,7 @@ function DeploymentDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       {isEditMode ? (
                         <InputField
                           label='Pick-up Out'
@@ -504,7 +504,7 @@ function DeploymentDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       {isEditMode ? (
                         <InputField
                           label='Dest Arrival'
@@ -571,7 +571,7 @@ function DeploymentDetailsModal ({
                         )}
                       ></div>
                     </div>
-                    <div className='pb-8 flex-1 w-56'>
+                    <div className='pb-6 flex-1 w-56'>
                       {isEditMode ? (
                         <InputField
                           label='Dest Departure'
@@ -925,7 +925,7 @@ function DeploymentDetailsModal ({
                             <div className='outline outline-gray-200 px-3 py-2 rounded'>
                               <p
                                 className={clsx(
-                                  'capitalize w-fit px-2 py-0.5 rounded-full text-sm font-medium',
+                                  'capitalize w-fit px-2 py-0.5 rounded-full text-sm',
                                   {
                                     'bg-orange-500/10 text-orange-500':
                                       editForm?.status === 'preparing',
@@ -1209,7 +1209,7 @@ function DeploymentDetailsModal ({
                             <div className='outline outline-gray-200 px-3 py-2 rounded'>
                               <p
                                 className={clsx(
-                                  'capitalize w-fit px-2 py-0.5 rounded-full text-sm font-medium',
+                                  'capitalize w-fit px-2 py-0.5 rounded-full text-sm',
                                   {
                                     'bg-orange-500/10 text-orange-500':
                                       editForm?.status === 'preparing',
@@ -1249,7 +1249,7 @@ function DeploymentDetailsModal ({
                       </p>
                     </label>
 
-                    <div className='grid grid-cols-3 gap-6'>
+                    <div className='grid grid-cols-2 gap-6'>
                       <InputField
                         label='Sacks Count'
                         type='number'
@@ -1263,7 +1263,7 @@ function DeploymentDetailsModal ({
                       />
 
                       <InputField
-                        label='Load Weight'
+                        label='Load Weight (kg)'
                         type='number'
                         name='loadWeightKg'
                         value={editForm?.loadWeightKg}
@@ -1273,33 +1273,6 @@ function DeploymentDetailsModal ({
                         thousandSeparator={true}
                         decimalScale={0}
                       />
-
-                      <label className='flex flex-col gap-1'>
-                        <span className='uppercase text-xs text-gray-500 font-semibold'>
-                          Unloading
-                        </span>
-                        <p className='outline outline-gray-200 px-3 py-2 rounded break-all focus:outline-gray-400 text-nowrap'>
-                          {(() => {
-                            if (
-                              !editForm?.destDeparture ||
-                              !editForm?.destArrival
-                            ) {
-                              return <span className='text-gray-500'>N/A</span>
-                            }
-
-                            const { hours, minutes } = DateTime.fromISO(
-                              editForm?.destDeparture
-                            ).diff(DateTime.fromISO(editForm?.destArrival), [
-                              'hours',
-                              'minutes'
-                            ])
-
-                            return hours
-                              ? `${hours}h ${Math.floor(minutes)}m`
-                              : `${Math.floor(minutes)}m`
-                          })()}
-                        </p>
-                      </label>
                     </div>
 
                     <InputField

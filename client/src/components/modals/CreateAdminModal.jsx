@@ -18,7 +18,6 @@ import useCreateUser from '../../hooks/userCreateUser'
 function CreateAdminModal ({ isOpen, onClose, onCreate }) {
   const [formData, setFormData] = useState({
     firstname: '',
-    middlename: '',
     lastname: '',
     email: '',
     phoneNo: '',
@@ -43,7 +42,6 @@ function CreateAdminModal ({ isOpen, onClose, onCreate }) {
     setPreviewImage(null)
     setFormData({
       firstname: '',
-      middlename: '',
       lastname: '',
       email: '',
       phoneNo: '',
@@ -176,7 +174,7 @@ function CreateAdminModal ({ isOpen, onClose, onCreate }) {
 
               <form
                 onSubmit={handleSubmit}
-                className='mt-4 grid grid-cols-3 gap-x-6 gap-y-4'
+                className='mt-4 grid grid-cols-2 gap-x-6 gap-y-4'
               >
                 <InputField
                   label='Firstname'
@@ -185,16 +183,6 @@ function CreateAdminModal ({ isOpen, onClose, onCreate }) {
                   placeholder='Firstname'
                   value={formData.firstname}
                   onChange={handleChange}
-                />
-
-                <InputField
-                  label='Middlename'
-                  type='text'
-                  name='middlename'
-                  placeholder='Middlename'
-                  value={formData.middlename}
-                  onChange={handleChange}
-                  isRequired={false}
                 />
 
                 <InputField
@@ -227,28 +215,6 @@ function CreateAdminModal ({ isOpen, onClose, onCreate }) {
                   phoneMaxLength={11}
                 />
 
-                <label className='flex flex-col gap-1'>
-                  <span className='uppercase text-xs text-gray-500 font-semibold'>
-                    Status
-                  </span>
-                  <div className='relative'>
-                    <select
-                      name='status'
-                      value={formData.status}
-                      onChange={handleChange}
-                      required
-                      className='outline outline-gray-300 px-3 py-2 rounded focus:outline-2 focus:outline-gray-400 appearance-none w-full'
-                    >
-                      {USER_STATUS_TYPES.map((status, index) => (
-                        <option key={index} value={status.value}>
-                          {status.label}
-                        </option>
-                      ))}
-                    </select>
-                    <MdKeyboardArrowDown className='absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 text-lg' />
-                  </div>
-                </label>
-
                 <InputField
                   label='Password'
                   type='password'
@@ -270,7 +236,8 @@ function CreateAdminModal ({ isOpen, onClose, onCreate }) {
                 <div className='mt-12 col-span-full'>
                   <button
                     type='submit'
-                    className='bg-primaryColor text-white px-8 py-2 uppercase text-sm font-semibold rounded flex items-center gap-2 cursor-pointer active:scale-95 transition-all hover:brightness-95'
+                    className='bg-linear-to-b from-emerald-500 to-emerald-600
+                     text-white px-8 py-2 uppercase text-sm font-semibold rounded flex items-center gap-2 cursor-pointer active:scale-95 transition-all hover:brightness-95'
                   >
                     {isLoading ? (
                       <>
