@@ -630,41 +630,50 @@ function DeploymentDetailsModal ({
                         <p className='text-xs font-semibold uppercase text-gray-500'>
                           Unloading Time
                         </p>
-                        {isEditMode ? (
-                          editForm?.destDeparture && editForm?.destArrival ? (
-                            <div className='outline outline-gray-300 px-3 py-2 rounded break-all focus:outline-gray-400 flex items-center gap-2'>
-                              <LuClock />
-                              {(() => {
-                                const { hours, minutes } = DateTime.fromISO(
-                                  editForm.destDeparture
-                                ).diff(DateTime.fromISO(editForm.destArrival), [
-                                  'hours',
-                                  'minutes'
-                                ])
-                                return hours
-                                  ? `${hours}h ${Math.floor(minutes)}m`
-                                  : `${Math.floor(minutes)}m`
-                              })()}
-                            </div>
-                          ) : (
-                            <p className='italic text-gray-400 text-sm font-light outline outline-gray-300 px-3 py-2.5 rounded break-all focus:outline-gray-400'>
-                              Pending
-                            </p>
-                          )
-                        ) : deployment?.destDeparture &&
-                          deployment?.destArrival ? (
+                        {deployment?.destDeparture ||
+                        deployment?.destArrival ? (
                           <div className='outline outline-gray-300 px-3 py-2 rounded break-all focus:outline-gray-400 flex items-center gap-2'>
-                            <LuClock />
+                            {/* <LuClock /> */}
                             {(() => {
-                              const { hours, minutes } = DateTime.fromISO(
-                                deployment.destDeparture
-                              ).diff(DateTime.fromISO(deployment.destArrival), [
+                              const { days, hours, minutes } = DateTime.fromISO(
+                                editForm.destDeparture
+                              ).diff(DateTime.fromISO(editForm.destArrival), [
+                                'days',
                                 'hours',
                                 'minutes'
                               ])
-                              return hours
-                                ? `${hours}h ${Math.floor(minutes)}m`
-                                : `${Math.floor(minutes)}m`
+
+                              const totalHours = days * 24 + hours
+
+                              const formatDays = () => {
+                                const parts = []
+                                if (days > 0) parts.push(`${days}d`)
+                                if (hours > 0) parts.push(`${hours}h`)
+                                if (minutes > 0)
+                                  parts.push(`${Math.floor(minutes)}m`)
+                                return (
+                                  parts.join(' ') || `${Math.floor(minutes)}m`
+                                )
+                              }
+
+                              const formatTotalHours = () => {
+                                if (totalHours > 0) {
+                                  return `${totalHours}h${
+                                    minutes > 0
+                                      ? ` ${Math.floor(minutes)}m`
+                                      : ''
+                                  }`
+                                }
+                                return `${Math.floor(minutes)}m`
+                              }
+
+                              if (totalHours >= 24) {
+                                return `${formatDays()} (${formatTotalHours()})`
+                              } else if (hours > 0) {
+                                return `${hours}h ${Math.floor(minutes)}m`
+                              } else {
+                                return `${Math.floor(minutes)}m`
+                              }
                             })()}
                           </div>
                         ) : (
@@ -682,9 +691,32 @@ function DeploymentDetailsModal ({
               <div className='px-6 py-8 flex-1 flex flex-col'>
                 <div className='flex items-center gap-3'>
                   <h2 className='text-lg font-semibold'>Deployment Details</h2>
-                  <p className='bg-gray-100 px-2 py-1 rounded-md shadow-card3 text-sm font-medium'>
+                  <div
+                    className='bg-gray-100 px-2 py-1 rounded-md shadow-card3 text-sm font-medium relative cursor-copy'
+                    onClick={e => {
+                      e.stopPropagation()
+                      navigator.clipboard.writeText(deployment.deploymentCode)
+
+                      // Show feedback tooltip
+                      const div = e.currentTarget
+                      const tooltip = document.createElement('div')
+                      tooltip.className =
+                        'absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50'
+                      tooltip.textContent = 'Copied'
+
+                      div.appendChild(tooltip)
+
+                      // Remove after 1 second
+                      setTimeout(() => {
+                        if (div.contains(tooltip)) {
+                          div.removeChild(tooltip)
+                        }
+                      }, 1000)
+                    }}
+                    title='Click to copy'
+                  >
                     #{editForm?.deploymentCode}
-                  </p>
+                  </div>
                 </div>
 
                 {!isReplacementShow ? (

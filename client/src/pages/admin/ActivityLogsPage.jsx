@@ -170,7 +170,7 @@ function ActivityLogsPage () {
                 <button
                   onClick={handleResetFilters}
                   disabled={isLoading}
-                  className='bg-gray-200 text-gray-600  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
+                  className='bg-linear-to-b from-gray-100 to-gray-200 text-gray-600  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
                 >
                   Reset
                 </button>
@@ -178,7 +178,7 @@ function ActivityLogsPage () {
                 <button
                   onClick={handleApplyFilters}
                   disabled={isLoading}
-                  className='bg-primaryColor text-white  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
+                  className='bg-linear-to-b from-emerald-500 to-emerald-600 text-white  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
                 >
                   Apply
                 </button>

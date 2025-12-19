@@ -98,10 +98,16 @@ const createUser = async (req, res, next) => {
           })
           .toBuffer()
 
+        // folder path
+        const folderPath =
+          role === 'head_admin' || role === 'admin'
+            ? 'Ebun/admin'
+            : 'Ebun/visitor'
+
         // upload the image to cloudinary
         const uploadResult = await uploadImageToCloudinary(
           compressedImage,
-          'Yza/visitor'
+          folderPath
         )
 
         imageData = {
@@ -242,7 +248,7 @@ const createAdmin = async (req, res, next) => {
         // upload the image to cloudinary
         const uploadResult = await uploadImageToCloudinary(
           compressedImage,
-          'Yza/admin'
+          'Ebun/admin'
         )
 
         imageData = {
@@ -492,8 +498,15 @@ const updateUser = async (req, res, next) => {
       return next(createError(404, 'User not found'))
     }
 
+    if (req.user.role === 'visitor' && id === req.user._id) {
+    }
+
     // Check permissions
-    if (req.user.role !== 'head_admin' && req.user.role !== 'admin') {
+    if (
+      req.user.role !== 'head_admin' &&
+      req.user.role !== 'admin' &&
+      req.user.role !== 'visitor'
+    ) {
       return next(createError(403, 'Access denied'))
     }
 
@@ -534,7 +547,9 @@ const updateUser = async (req, res, next) => {
         // upload new image
         const uploadResult = await uploadImageToCloudinary(
           req.file.buffer,
-          existingUser.role === 'admin' ? 'Yza/admin' : 'Yza/visitor'
+          existingUser.role === 'head_admin' || existingUser.role === 'admin'
+            ? 'Ebun/admin'
+            : 'Ebun/visitor'
         )
 
         imageUrl = uploadResult.secure_url
@@ -558,15 +573,55 @@ const updateUser = async (req, res, next) => {
     if (role && role !== existingUser.role) updatedFields.push('role')
     if (req.file) updatedFields.push('profile picture')
 
-    const actionMessage =
-      updatedFields.length > 0
-        ? `Updated ${
-            existingUser.role === 'admin' ? "admin's" : "visitor's"
-          } ${updatedFields.join(', ')}`
-        : `Updated ${
-            existingUser.role === 'admin' ? 'admin' : 'visitor'
-          } details`
+    // Check if user is updating their own profile
+    const isUpdatingOwnProfile = req.user._id.toString() === id.toString()
+    let actionMessage = ''
+    if (updatedFields.length > 0) {
+      if (isUpdatingOwnProfile) {
+        // User is updating their own profile
+        const roleString =
+          existingUser.role === 'head_admin'
+            ? 'Head admin'
+            : existingUser.role === 'admin'
+            ? 'Admin'
+            : 'Visitor'
 
+        actionMessage = `${roleString} updated their own ${updatedFields.join(
+          ', '
+        )}`
+      } else {
+        // User is updating another user's profile
+        const targetRole =
+          existingUser.role === 'head_admin'
+            ? "Head admin's"
+            : existingUser.role === 'admin'
+            ? "Admin's"
+            : "Visitor's"
+
+        actionMessage = `Updated ${targetRole} ${updatedFields.join(', ')}`
+      }
+    } else {
+      // No fields were actually changed
+      if (isUpdatingOwnProfile) {
+        const roleString =
+          existingUser.role === 'head_admin'
+            ? 'Head admin'
+            : existingUser.role === 'admin'
+            ? 'Admin'
+            : 'Visitor'
+
+        actionMessage = `${roleString} attempted to update their own profile (no changes)`
+      } else {
+        const targetRole =
+          existingUser.role === 'head_admin'
+            ? 'Head admin'
+            : existingUser.role === 'admin'
+            ? 'Admin'
+            : 'Visitor'
+
+        actionMessage = `Attempted to update ${targetRole} profile (no changes)`
+      }
+    }
     // update fields
     const updatedFieldsData = {
       firstname: firstname || existingUser.firstname,

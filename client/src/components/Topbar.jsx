@@ -22,7 +22,7 @@ function TopBar () {
             className='flex items-center gap-4 cursor-pointer'
           >
             <div className='flex flex-col items-end'>
-              <p className='text-sm font-semibold text-nowrap'>
+              <p className='text-sm font-semibold text-nowrap capitalize'>
                 {`${userData.data.firstname} ${userData.data.lastname}`}
               </p>
               <span className='text-xs capitalize'>

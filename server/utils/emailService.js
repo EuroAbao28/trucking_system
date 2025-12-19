@@ -13,10 +13,10 @@ const sendStatusEmail = async ({ user, status }) => {
   // Status-specific content for your application
   const statusConfig = {
     active: {
-      subject: 'Account Approved - YZA Agricultural Services',
+      subject: 'Account Approved - Ebun Freight Inc.',
       title: 'Account Approved',
       greeting: `Congratulations ${firstname}! Your account has been approved.`,
-      body: 'Your registration has been reviewed and approved by our administrators. You can now log in to your account and access all features of YZA Agricultural Services.',
+      body: 'Your registration has been reviewed and approved by our administrators. You can now log in to your account and access all features of Ebun Freight Inc..',
       actionMessage: 'Please log in using your credentials to get started.',
       buttonText: 'Login to Your Account',
       buttonLink: 'https://your-domain.com/login',
@@ -24,7 +24,7 @@ const sendStatusEmail = async ({ user, status }) => {
       iconAlt: 'Check Mark Icon'
     },
     rejected: {
-      subject: 'Account Registration Update - YZA Agricultural Services',
+      subject: 'Account Registration Update - Ebun Freight Inc.',
       title: 'Registration Not Approved',
       greeting: `Dear ${firstname},`,
       body: 'After careful review, we are unable to approve your account registration at this time.',
@@ -36,7 +36,7 @@ const sendStatusEmail = async ({ user, status }) => {
       iconAlt: 'X Mark Icon'
     },
     inactive: {
-      subject: 'Account Deactivated - YZA Agricultural Services',
+      subject: 'Account Deactivated - Ebun Freight Inc.',
       title: 'Account Deactivated',
       greeting: `Dear ${firstname},`,
       body: 'Your account has been deactivated. This could be due to prolonged inactivity or administrative action.',
@@ -48,7 +48,7 @@ const sendStatusEmail = async ({ user, status }) => {
       iconAlt: 'Pause Icon'
     },
     revoked: {
-      subject: 'Account Access Revoked - YZA Agricultural Services',
+      subject: 'Account Access Revoked - Ebun Freight Inc.',
       title: 'Access Revoked',
       greeting: `Dear ${firstname},`,
       body: 'Your account access has been revoked by the administrators.',
@@ -97,11 +97,11 @@ const sendStatusEmail = async ({ user, status }) => {
           <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px; text-align: center;">
             <img
               src="${LOGO_URL}"
-              alt="YZA Agricultural Services Logo"
+              alt="Ebun Freight Inc. Logo"
               style="height: 70px; border-radius: 50%; border: 4px solid white; margin-bottom: 15px;"
             />
             <h1 style="font-size: 24px; font-weight: 600; margin: 0; color: white;">
-              YZA Agricultural Services
+              Ebun Freight Inc.
             </h1>
           </div>
 
@@ -163,7 +163,7 @@ const sendStatusEmail = async ({ user, status }) => {
             <!-- Footer -->
             <div style="border-top: 1px solid #e5e7eb; padding-top: 24px; margin-top: 24px;">
               <p style="font-size: 14px; color: #6b7280; margin: 0 0 8px 0;">Best regards,</p>
-              <p style="font-weight: 600; color: #1f2937; margin: 0 0 16px 0;">YZA Agricultural Services Team</p>
+              <p style="font-weight: 600; color: #1f2937; margin: 0 0 16px 0;">Ebun Freight Inc. Team</p>
               
               <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
                 <a href="https://www.yzaagri.tech/" style="color: #10b981; text-decoration: none; font-size: 14px;">Website</a>
@@ -172,7 +172,7 @@ const sendStatusEmail = async ({ user, status }) => {
               </div>
               
               <p style="font-size: 12px; color: #9ca3af; text-align: center; margin-top: 20px;">
-                © ${new Date().getFullYear()} YZA Agricultural Services. All rights reserved.<br>
+                © ${new Date().getFullYear()} Ebun Freight Inc.. All rights reserved.<br>
                 This is an automated message, please do not reply to this email.
               </p>
             </div>
@@ -203,7 +203,7 @@ const sendStatusEmail = async ({ user, status }) => {
     })
 
     await transporter.sendMail({
-      from: `"YZA Agricultural Services" <${process.env.EMAIL_USER}>`,
+      from: `"Ebun Freight Inc." <${process.env.EMAIL_USER}>`,
       to: email,
       subject: config.subject,
       html: htmlTemplate

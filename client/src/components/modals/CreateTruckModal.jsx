@@ -267,50 +267,6 @@ function CreateTruckModal ({ isOpen, onClose, onCreate, allTools }) {
                   </div>
                 </label>
 
-                {/* <div className='col-span-full flex flex-col gap-1'>
-                  <label className='uppercase text-xs text-gray-500 font-semibold'>
-                    Tool Selection
-                  </label>
-                  <div className='outline outline-gray-300 p-2 rounded grid grid-cols-3 gap-2 max-h-38.5 overflow-y-auto'>
-                    {TRUCK_TOOLS.map((tool, index) => {
-                      const isSelected = isToolSelected(tool)
-                      const quantity = getToolQuantity(tool)
-
-                      return (
-                        <label
-                          key={index}
-                          className='flex items-center gap-3 p-3 border border-gray-200 rounded cursor-pointer bg-gray-50'
-                        >
-                          <input
-                            type='checkbox'
-                            name='tools'
-                            value={tool}
-                            onChange={handleToolChange}
-                            checked={isSelected}
-                            className='w-4 h-4 text-primaryColor rounded focus:ring-primaryColor'
-                          />
-                          <span className='text-sm capitalize text-nowrap truncate flex-1'>
-                            {tool.toLowerCase()}
-                          </span>
-
-                          {isSelected && (
-                            <input
-                              type='number'
-                              min='1'
-                              value={quantity}
-                              onChange={e =>
-                                handleQuantityChange(tool, e.target.value)
-                              }
-                              className='text-sm capitalize text-nowrap truncate outline outline-gray-200 text-center w-12 rounded-xs bg-white'
-                              placeholder='Qty'
-                            />
-                          )}
-                        </label>
-                      )
-                    })}
-                  </div>
-                </div> */}
-
                 <div className='mt-12 col-span-full'>
                   <button
                     type='submit'

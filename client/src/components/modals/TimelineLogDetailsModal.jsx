@@ -450,9 +450,34 @@ function TimelineLogDetailsModal ({
               <div className='px-6 py-8 flex-1 flex flex-col'>
                 <div className='flex items-center gap-3'>
                   <h2 className='text-lg font-semibold'>Deployment Details</h2>
-                  <p className='bg-gray-100 px-2 py-1 rounded-md shadow-card3 text-sm font-medium'>
+                  <div
+                    className='bg-gray-100 px-2 py-1 rounded-md shadow-card3 text-sm font-medium relative cursor-copy'
+                    onClick={e => {
+                      e.stopPropagation()
+                      navigator.clipboard.writeText(
+                        timelineDetails?.targetDeployment?.deploymentCode
+                      )
+
+                      // Show feedback tooltip
+                      const div = e.currentTarget
+                      const tooltip = document.createElement('div')
+                      tooltip.className =
+                        'absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50'
+                      tooltip.textContent = 'Copied'
+
+                      div.appendChild(tooltip)
+
+                      // Remove after 1 second
+                      setTimeout(() => {
+                        if (div.contains(tooltip)) {
+                          div.removeChild(tooltip)
+                        }
+                      }, 1000)
+                    }}
+                    title='Click to copy'
+                  >
                     #{timelineDetails?.targetDeployment?.deploymentCode}
-                  </p>
+                  </div>
                 </div>
 
                 {!isReplacementShow ? (

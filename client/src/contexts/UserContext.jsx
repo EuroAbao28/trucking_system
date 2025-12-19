@@ -36,12 +36,22 @@ export const UserProvider = ({ children }) => {
     }
   }
 
+  const updateUser = updatedUser => {
+    console.log('Updating user with:', updatedUser)
+    setUserData(prev => ({
+      ...prev,
+      data: { ...prev.data, ...updatedUser }
+    }))
+  }
+
   useEffect(() => {
     getCurrentUser()
   }, [])
 
   return (
-    <UserContext.Provider value={{ userData }}>{children}</UserContext.Provider>
+    <UserContext.Provider value={{ userData, updateUser }}>
+      {children}
+    </UserContext.Provider>
   )
 }
 

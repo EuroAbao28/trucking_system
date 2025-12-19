@@ -181,7 +181,7 @@ function DriverManagement () {
                   <button
                     onClick={handleResetFilters}
                     disabled={isLoading}
-                    className='bg-gray-200 text-gray-600  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
+                    className='bg-linear-to-b from-gray-100 to-gray-200 text-gray-600  rounded py-2 px-8 font-semibold uppercase active:scale-95 transition-all text-sm cursor-pointer hover:brightness-95'
                   >
                     Reset
                   </button>

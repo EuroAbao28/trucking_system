@@ -98,7 +98,9 @@ const createDeployment = async (req, res, next) => {
     await ActivityLog.create({
       type: 'deployment',
       performedBy: req.user._id,
-      action: `${newDeployment.deploymentCode}: Assigned ${truck.plateNo} to deployment`,
+      action: `${
+        newDeployment.deploymentCode
+      }: Assigned ${truck.plateNo.toUpperCase()} to deployment`,
       targetDeployment: newDeployment._id
     })
 
@@ -189,6 +191,7 @@ const getAllDeployments = async (req, res, next) => {
         const destination = (deployment.destination || '').toLowerCase()
         const pickupSite = (deployment.pickupSite || '').toLowerCase()
         const truckType = (deployment.truckType || '').toLowerCase()
+        const deploymentCode = (deployment.deploymentCode || '').toLowerCase()
 
         return (
           activeTruckPlate.includes(searchLower) ||
@@ -196,7 +199,8 @@ const getAllDeployments = async (req, res, next) => {
           activeDriverLastname.includes(searchLower) ||
           destination.includes(searchLower) ||
           pickupSite.includes(searchLower) ||
-          truckType.includes(searchLower)
+          truckType.includes(searchLower) ||
+          deploymentCode.includes(searchLower)
         )
       })
     }
@@ -686,6 +690,13 @@ const updateDeployment = async (req, res, next) => {
     if (performedReplacement && replacementTruckDetails) {
       await createActivityLog(
         `Truck replaced from ${replacementTruckDetails.oldPlateNo} to ${replacementTruckDetails.newPlateNo}`
+      )
+    }
+
+    // Activity logs for driver replacement
+    if (performedDriverReplacement && replacementDriverDetails) {
+      await createActivityLog(
+        `Driver replaced from ${replacementDriverDetails.oldDriverName} to ${replacementDriverDetails.newDriverName}`
       )
     }
 

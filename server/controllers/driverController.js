@@ -70,7 +70,7 @@ const createDriver = async (req, res, next) => {
         // upload the image to cloudinary
         const uploadResult = await uploadImageToCloudinary(
           compressedImage,
-          'Yza/driver'
+          'Ebun/driver'
         )
 
         imageData = {
@@ -215,7 +215,7 @@ const updateDriver = async (req, res, next) => {
         // upload new image
         const uploadResult = await uploadImageToCloudinary(
           req.file.buffer,
-          'Yza/driver'
+          'Ebun/driver'
         )
 
         imageUrl = uploadResult.secure_url

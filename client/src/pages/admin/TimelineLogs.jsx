@@ -119,25 +119,25 @@ function TimelineLogs () {
 
   // Get truck plate from deployment
   const getTruckPlate = log => {
-    if (log.targetDeployment?.truckId?.plateNo) {
-      return log.targetDeployment.truckId.plateNo
-    }
     if (log.targetDeployment?.replacement?.replacementTruckId?.plateNo) {
       return log.targetDeployment.replacement.replacementTruckId.plateNo
+    }
+    if (log.targetDeployment?.truckId?.plateNo) {
+      return log.targetDeployment.truckId.plateNo
     }
     return 'N/A'
   }
 
   // Get driver name from deployment
   const getDriverName = log => {
+    if (log.targetDeployment?.replacement?.replacementDriverId) {
+      const driver = log.targetDeployment.replacement.replacementDriverId
+      return `${driver.firstname || ''} ${driver.lastname || ''}`.trim()
+    }
     if (log.targetDeployment?.driverId) {
       return `${log.targetDeployment.driverId.firstname || ''} ${
         log.targetDeployment.driverId.lastname || ''
       }`.trim()
-    }
-    if (log.targetDeployment?.replacement?.replacementDriverId) {
-      const driver = log.targetDeployment.replacement.replacementDriverId
-      return `${driver.firstname || ''} ${driver.lastname || ''}`.trim()
     }
     return 'Unknown Driver'
   }

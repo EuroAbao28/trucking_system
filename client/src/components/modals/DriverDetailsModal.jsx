@@ -407,43 +407,4 @@ const InputField = ({
   )
 }
 
-const DateInputField = ({
-  label,
-  name,
-  value,
-  onChange,
-  disabled,
-  isRequired = true
-}) => {
-  // Convert to YYYY-MM-DD format for input[type="date"]
-  const formatDateForInput = date => {
-    if (!date) return ''
-
-    // If it's already a Date object, convert to ISO string first
-    if (date instanceof Date) {
-      return DateTime.fromJSDate(date).toFormat('yyyy-MM-dd')
-    }
-
-    // If it's already an ISO string, use it directly
-    return DateTime.fromISO(date).toFormat('yyyy-MM-dd')
-  }
-
-  return (
-    <label className='flex flex-col gap-1'>
-      <span className='uppercase text-xs text-gray-500 font-semibold'>
-        {label}
-      </span>
-      <input
-        type='date'
-        name={name}
-        value={formatDateForInput(value)} // Remove .toISOString() here
-        onChange={onChange}
-        disabled={disabled}
-        required={isRequired}
-        className='outline outline-gray-200 px-3 py-2 rounded break-all focus:outline-gray-400 w-full'
-      />
-    </label>
-  )
-}
-
 export default DriverDetailsModal

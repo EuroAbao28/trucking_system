@@ -70,7 +70,7 @@ const createTruck = async (req, res, next) => {
         // upload the image to cloudinary
         const uploadResult = await uploadImageToCloudinary(
           compressedImage,
-          'Yza/truck'
+          'Ebun/truck'
         )
 
         imageData = {
@@ -239,7 +239,7 @@ const updateTruck = async (req, res, next) => {
         // upload new image
         const uploadResult = await uploadImageToCloudinary(
           req.file.buffer,
-          'Yza/truck'
+          'Ebun/truck'
         )
 
         imageUrl = uploadResult.secure_url
