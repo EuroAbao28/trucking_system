@@ -346,9 +346,13 @@ function DriverManagement () {
                       </td>
                       <td>{driver.phoneNo}</td>
                       <td>
-                        <p className='text-nowrap uppercase'>
-                          {driver.licenseNo}
-                        </p>
+                        {driver.licenseNo ? (
+                          <p className='text-nowrap uppercase'>
+                            {driver.licenseNo}
+                          </p>
+                        ) : (
+                          <p className='text-gray-500'>N/A</p>
+                        )}
                       </td>
                       <td>{driver.tripCount}</td>
                       <td>

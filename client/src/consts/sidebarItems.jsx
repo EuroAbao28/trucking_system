@@ -78,7 +78,7 @@ export const SIDEBAR_ITEMS = [
     icon: <TbLicense />,
     name: 'Activity Logs',
     path: '/secure/activity-logs',
-    role: ['head_admin', 'admin']
+    role: ['head_admin']
   }
 ]
 

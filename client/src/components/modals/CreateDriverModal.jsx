@@ -209,6 +209,7 @@ function CreateDriverModal ({ isOpen, onClose, onCreate }) {
                   value={formData.licenseNo}
                   onChange={handleChange}
                   isUppercase={true}
+                  isRequired={false}
                 />
 
                 <div className='mt-12 col-span-full'>

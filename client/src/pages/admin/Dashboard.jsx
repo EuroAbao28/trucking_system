@@ -277,7 +277,7 @@ const Dashboard = () => {
   // Horizontal bar chart options for all drivers
   const horizontalBarOptions = {
     ...chartOptions,
-    indexAxis: 'y', // This makes it horizontal
+    indexAxis: 'x', // This makes it horizontal
     scales: {
       ...chartOptions.scales,
       x: {

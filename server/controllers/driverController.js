@@ -20,8 +20,7 @@ const createDriver = async (req, res, next) => {
         firstname,
         lastname,
         phoneNo,
-        status,
-        licenseNo
+        status
       },
       false
     )

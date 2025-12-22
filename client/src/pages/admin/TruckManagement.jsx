@@ -161,7 +161,7 @@ function TruckManagement () {
                 className='dropdown-content menu mt-3 bg-white shadow-sm rounded w-sm ring-1 ring-gray-300'
               >
                 <div className='grid grid-cols-2 gap-4 p-4'>
-                  <label className='flex items-center text-sm outline outline-gray-200 rounded py-2 px-3 gap-2'>
+                  <label className='col-span-2 flex items-center text-sm outline outline-gray-200 rounded py-2 px-3 gap-2'>
                     <p className='font-semibold'>Type</p>
                     <select
                       name='truckType'
@@ -171,23 +171,6 @@ function TruckManagement () {
                     >
                       <option value=''>All</option>
                       {TRUCK_TYPES.map((item, index) => (
-                        <option key={index} value={item.value}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label className='flex items-center  justify-between col-span-1 text-sm outline outline-gray-200 rounded py-2 px-3 gap-3'>
-                    <p className='font-semibold whitespace-nowrap'>Condition</p>
-                    <select
-                      name='condition'
-                      value={tempFilters.condition}
-                      onChange={handleChangeFilter}
-                      className=' focus:outline-none w-full'
-                    >
-                      <option value=''>All</option>
-                      {TRUCK_CONDITIONS.map((item, index) => (
                         <option key={index} value={item.value}>
                           {item.label}
                         </option>
@@ -366,6 +349,7 @@ function TruckManagement () {
                     <td>Image</td>
                     <td>Plate No.</td>
                     <td>Type</td>
+                    <td>Max Load</td>
                     <td>Status</td>
                   </tr>
                 </thead>
@@ -393,6 +377,7 @@ function TruckManagement () {
                       </td>
                       <td className='uppercase'>{truck.plateNo}</td>
                       <td className='capitalize'>{truck.truckType}</td>
+                      <td></td>
                       <td>
                         <div
                           className={clsx(

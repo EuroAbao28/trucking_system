@@ -125,9 +125,13 @@ const getAllDeployments = async (req, res, next) => {
       status,
       search,
       sort = 'latest',
+      assignedAt,
+      departedAt,
       perPage = 50,
       page = 1
     } = req.query
+
+    console.log(req.query)
 
     // Build base query
     let baseQuery = Deployment.find()
@@ -135,6 +139,47 @@ const getAllDeployments = async (req, res, next) => {
     // Status filter
     if (status && status !== '') {
       baseQuery = baseQuery.where('status').equals(status)
+    }
+
+    // assignedAt filter (filters by createdAt date)
+    if (assignedAt) {
+      const targetDate = new Date(assignedAt)
+
+      if (isNaN(targetDate.getTime())) {
+        return next(
+          createError(400, 'Invalid assignedAt date format. Use YYYY-MM-DD')
+        )
+      }
+
+      const startOfDay = new Date(targetDate)
+      startOfDay.setHours(0, 0, 0, 0)
+
+      const endOfDay = new Date(targetDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      baseQuery = baseQuery.where('createdAt').gte(startOfDay).lt(endOfDay)
+    }
+
+    // departedAt filter (filters by departed timestamp)
+    if (departedAt) {
+      const targetDate = new Date(departedAt)
+
+      if (isNaN(targetDate.getTime())) {
+        return next(
+          createError(400, 'Invalid departedAt date format. Use YYYY-MM-DD')
+        )
+      }
+
+      const startOfDay = new Date(targetDate)
+      startOfDay.setHours(0, 0, 0, 0)
+
+      const endOfDay = new Date(targetDate)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      baseQuery = baseQuery
+        .where('departed')
+        .gte(startOfDay.toISOString())
+        .lt(endOfDay.toISOString())
     }
 
     // Sorting
@@ -205,10 +250,29 @@ const getAllDeployments = async (req, res, next) => {
       })
     }
 
-    // Get total count
+    // Get total count (should match the filters)
     let totalQuery = Deployment.find()
     if (status && status !== '') {
       totalQuery = totalQuery.where('status').equals(status)
+    }
+    if (assignedAt) {
+      const targetDate = new Date(assignedAt)
+      const startOfDay = new Date(targetDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(targetDate)
+      endOfDay.setHours(23, 59, 59, 999)
+      totalQuery = totalQuery.where('createdAt').gte(startOfDay).lt(endOfDay)
+    }
+    if (departedAt) {
+      const targetDate = new Date(departedAt)
+      const startOfDay = new Date(targetDate)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(targetDate)
+      endOfDay.setHours(23, 59, 59, 999)
+      totalQuery = totalQuery
+        .where('departed')
+        .gte(startOfDay.toISOString())
+        .lt(endOfDay.toISOString())
     }
     const total = await totalQuery.countDocuments()
 
@@ -620,11 +684,13 @@ const updateDeployment = async (req, res, next) => {
       timelineLogs.push('Deployment resumed')
     }
 
-    // Update existing timeline logs for timestamp corrections
+    // ✅ FIXED: Only create/update timeline logs if the field didn't have a value before
+    // This prevents creating logs when updating existing timestamps
     if (
       departed !== undefined &&
       departed !== originalValues.departed &&
       departed &&
+      !originalValues.departed && // ✅ Only if it was empty before
       finalStatus !== 'canceled'
     ) {
       await createOrUpdateTimelineLog(
@@ -638,6 +704,7 @@ const updateDeployment = async (req, res, next) => {
       pickupIn !== undefined &&
       pickupIn !== originalValues.pickupIn &&
       pickupIn &&
+      !originalValues.pickupIn && // ✅ Only if it was empty before
       finalStatus !== 'canceled'
     ) {
       await createOrUpdateTimelineLog(
@@ -651,6 +718,7 @@ const updateDeployment = async (req, res, next) => {
       pickupOut !== undefined &&
       pickupOut !== originalValues.pickupOut &&
       pickupOut &&
+      !originalValues.pickupOut && // ✅ Only if it was empty before
       finalStatus !== 'canceled'
     ) {
       await createOrUpdateTimelineLog(
@@ -664,6 +732,7 @@ const updateDeployment = async (req, res, next) => {
       destArrival !== undefined &&
       destArrival !== originalValues.destArrival &&
       destArrival &&
+      !originalValues.destArrival && // ✅ Only if it was empty before
       finalStatus !== 'canceled'
     ) {
       await createOrUpdateTimelineLog(
@@ -677,6 +746,7 @@ const updateDeployment = async (req, res, next) => {
       destDeparture !== undefined &&
       destDeparture !== originalValues.destDeparture &&
       destDeparture &&
+      !originalValues.destDeparture && // ✅ Only if it was empty before
       finalStatus !== 'canceled'
     ) {
       await createOrUpdateTimelineLog(
@@ -690,13 +760,6 @@ const updateDeployment = async (req, res, next) => {
     if (performedReplacement && replacementTruckDetails) {
       await createActivityLog(
         `Truck replaced from ${replacementTruckDetails.oldPlateNo} to ${replacementTruckDetails.newPlateNo}`
-      )
-    }
-
-    // Activity logs for driver replacement
-    if (performedDriverReplacement && replacementDriverDetails) {
-      await createActivityLog(
-        `Driver replaced from ${replacementDriverDetails.oldDriverName} to ${replacementDriverDetails.newDriverName}`
       )
     }
 

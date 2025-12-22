@@ -278,18 +278,19 @@ function CalendarPage () {
     )} - ${endOfWeek.toLocaleDateString('en-US', formatOptions)}`
   }
 
-  // Updated renderMonthView with time, deployment code, and truck/event
+  // Updated renderMonthView using table
   const renderMonthView = () => {
     const daysInMonth = getDaysInMonth(currentDate)
     const firstDayOfMonth = getFirstDayOfMonth(currentDate)
     const events = getCalendarEvents()
 
-    const days = []
+    const weeks = []
+    let currentWeek = []
 
     // Add empty cells for days before the first day of month
     for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(
-        <div
+      currentWeek.push(
+        <td
           key={`empty-${i}`}
           className='min-h-32 p-2 bg-gray-50 border border-gray-200'
         />
@@ -309,10 +310,10 @@ function CalendarPage () {
 
       const isToday = date.toDateString() === new Date().toDateString()
 
-      days.push(
-        <div
+      currentWeek.push(
+        <td
           key={day}
-          className={`min-h-32 border border-gray-200 transition-colors cursor-pointer ${
+          className={`min-h-32 border border-gray-200 transition-colors cursor-pointer align-top ${
             isToday
               ? 'bg-blue-50 ring-1 ring-blue-200'
               : 'bg-white hover:bg-gray-50'
@@ -320,20 +321,22 @@ function CalendarPage () {
           onClick={() => handleDateCellClick(date)}
         >
           <div
-            className={`font-semibold mb-2 ${
+            className={`font-semibol mb-2 p-2 ${
               isToday ? 'text-blue-600' : 'text-gray-700'
             }`}
           >
             {day}
           </div>
+
           <div
-            className='space-y-1 max-h-48 overflow-y-auto px-1'
+            className='space-y-1 max-h-48 overflow-y-auto p-1'
             onClick={e => e.stopPropagation()}
           >
             {dayEvents.map(event => (
+              // items
               <div
                 key={event.id}
-                className={`${event.color} text-white text-xs p-2 rounded cursor-pointer hover:brightness-95 transition-opacity space-y-1`}
+                className={`${event.color}  text-white text-xs p-2 rounded cursor-pointer hover:brightness-95 transition-opacity space-y-1`}
                 onClick={() => handleDeploymentSelect(event.deployment)}
                 title={`${event.deploymentCode} - ${event.truckPlate} - ${
                   event.shortTitle
@@ -359,20 +362,69 @@ function CalendarPage () {
               </div>
             ))}
           </div>
-        </div>
+        </td>
+      )
+
+      // If we've filled a week (7 days), push it to weeks array and start a new week
+      if (currentWeek.length === 7) {
+        weeks.push(<tr key={`week-${weeks.length}`}>{currentWeek}</tr>)
+        currentWeek = []
+      }
+    }
+
+    // Fill remaining cells in the last week if needed
+    while (currentWeek.length > 0 && currentWeek.length < 7) {
+      currentWeek.push(
+        <td
+          key={`empty-end-${currentWeek.length}`}
+          className='min-h-32 p-2 bg-gray-50 border border-gray-200'
+        />
       )
     }
 
-    return days
+    // Add the last week if it has any days
+    if (currentWeek.length > 0) {
+      weeks.push(<tr key={`week-${weeks.length}`}>{currentWeek}</tr>)
+    }
+
+    return weeks
   }
 
-  // Updated renderWeekView with time, deployment code, and truck/event
+  // Updated renderWeekView using table with header
   const renderWeekView = () => {
     const startOfWeek = new Date(currentDate)
     startOfWeek.setDate(currentDate.getDate() - currentDate.getDay())
     const events = getCalendarEvents()
 
-    return Array.from({ length: 7 }).map((_, index) => {
+    // Generate headers
+    const headers = Array.from({ length: 7 }).map((_, index) => {
+      const date = new Date(startOfWeek)
+      date.setDate(startOfWeek.getDate() + index)
+      const isToday = date.toDateString() === new Date().toDateString()
+
+      return (
+        <th
+          key={index}
+          className={`w-[14.28%] p-3 text-center border-b border-gray-200 ${
+            isToday ? 'bg-blue-50' : 'bg-white'
+          }`}
+        >
+          <div className='font-semibold text-gray-600 uppercase text-sm'>
+            {date.toLocaleDateString('en-US', { weekday: 'short' })}
+          </div>
+          <div
+            className={`text-lg font-bold ${
+              isToday ? 'text-blue-600' : 'text-gray-800'
+            }`}
+          >
+            {date.getDate()}
+          </div>
+        </th>
+      )
+    })
+
+    // Generate cells
+    const weekCells = Array.from({ length: 7 }).map((_, index) => {
       const date = new Date(startOfWeek)
       date.setDate(startOfWeek.getDate() + index)
       const dayEvents = events.filter(
@@ -381,77 +433,71 @@ function CalendarPage () {
       const isToday = date.toDateString() === new Date().toDateString()
 
       return (
-        <div
+        <td
           key={index}
-          className={`border-x flex flex-col border-gray-200 transition-color cursor-pointer ${
+          className={`border border-gray-200 transition-colors align-top relative overflow-y-auto ${
             isToday
               ? 'bg-blue-50 ring-1 ring-blue-200'
               : 'bg-white hover:bg-gray-50'
           }`}
-          onClick={() => handleDateCellClick(date)}
         >
-          {/* date header */}
-          <div
-            className='border-b border-gray-200 p-3 sticky z-10 top-0 bg-white'
-            onClick={e => e.stopPropagation()}
-          >
-            <div className='font-semibold text-gray-600 uppercase text-sm'>
-              {date.toLocaleDateString('en-US', { weekday: 'short' })}
-            </div>
+          <div className='absolute top-0 left-0 right-0'>
             <div
-              className={`text-lg font-bold ${
-                isToday ? 'text-blue-600' : 'text-gray-800'
-              }`}
+              className='p-2 space-y-2 cursor-pointer'
+              onClick={() => handleDateCellClick(date)}
             >
-              {date.getDate()}
-            </div>
-          </div>
-
-          {/* items */}
-          <div
-            className='space-y-2 relative overflow-y-auto flex-1'
-            onClick={e => e.stopPropagation()}
-          >
-            <div className='absolute inset-0 p-2 flex flex-col gap-2'>
-              {dayEvents.map(event => (
-                <div
-                  key={event.id}
-                  className={`${event.color} text-white p-2 rounded cursor-pointer hover:brightness-95 transition-opacity space-y-1`}
-                  onClick={() => handleDeploymentSelect(event.deployment)}
-                  title={`${event.deploymentCode} - ${event.truckPlate} - ${
-                    event.shortTitle
-                  } at ${event.start.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}`}
-                >
-                  {/* Time and Deployment Code in one line */}
-                  <div className='flex items-center justify-between gap-1'>
-                    <div className='text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full'>
-                      {event.deploymentCode}
+              <div onClick={e => e.stopPropagation()} className='space-y-1.5'>
+                {dayEvents.map(event => (
+                  <div
+                    key={event.id}
+                    className={`${event.color} text-white p-2 rounded cursor-pointer hover:brightness-95 transition-opacity`}
+                    onClick={() => handleDeploymentSelect(event.deployment)}
+                    title={`${event.deploymentCode} - ${event.truckPlate} - ${
+                      event.shortTitle
+                    } at ${event.start.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}`}
+                  >
+                    {/* Time and Deployment Code in one line */}
+                    <div className='flex items-center justify-between gap-1'>
+                      <div className='text-xs font-medium bg-black/20 px-2 py-0.5 rounded-full'>
+                        {event.deploymentCode}
+                      </div>
+                      <div className='text-xs font-medium opacity-90'>
+                        {event.formattedTime}
+                      </div>
                     </div>
-                    <div className='text-xs font-medium opacity-90'>
-                      {event.formattedTime}
+
+                    {/* Truck plate and event type on new line */}
+                    <div className='text-xs truncate'>
+                      {event.truckPlate} - {event.shortTitle}
                     </div>
                   </div>
+                ))}
 
-                  {/* Truck plate and event type on new line */}
-                  <div className='text-xs truncate'>
-                    {event.truckPlate} - {event.shortTitle}
+                {dayEvents.length === 0 && (
+                  <div className='text-sm italic text-gray-400 text-center py-4'>
+                    No events
                   </div>
-                </div>
-              ))}
-            </div>
-
-            {dayEvents.length === 0 && (
-              <div className='text-sm italic text-gray-400 text-center py-4'>
-                No events
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
+        </td>
       )
     })
+
+    return (
+      <>
+        <thead className='sticky top-0 z-30 bg-white'>
+          <tr>{headers}</tr>
+        </thead>
+        <tbody>
+          <tr>{weekCells}</tr>
+        </tbody>
+      </>
+    )
   }
 
   // Render day view with time, deployment code, and truck/event
@@ -557,7 +603,7 @@ function CalendarPage () {
       <div className='flex-1 flex flex-col gap-6'>
         <div className='bg-white shadow-card3 outline outline-gray-200 rounded flex items-center justify-between gap-4'>
           {/* Current Period Display */}
-          <div className='text-2xl font-semibold p-6'>
+          <div className='text-2xl font-semibold px-4'>
             {view === 'month' && getMonthYearString()}
             {view === 'week' && getWeekRangeString()}
             {view === 'day' &&
@@ -569,9 +615,9 @@ function CalendarPage () {
               })}
           </div>
 
-          <div className='flex gap-6 px-6'>
+          <div className='flex gap-6'>
             {/* Navigation Controls */}
-            <div className='flex items-center'>
+            <div className='flex items-center py-1'>
               <button
                 onClick={prevPeriod}
                 className='py-4 px-6 hover:bg-gray-100 rounded-lg transition-colors text-gray-600 hover:text-gray-800 text-xl cursor-pointer'
@@ -595,13 +641,13 @@ function CalendarPage () {
             </div>
 
             {/* View Controls */}
-            <div className='flex space-x-1 bg-gray-100 p-1 rounded-lg'>
+            <div className='flex space-x-1 p-1 rounded-lg'>
               {['month', 'week', 'day'].map(viewType => (
                 <button
                   key={viewType}
                   className={`px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
                     view === viewType
-                      ? 'bg-white text-blue-600 shadow-sm'
+                      ? 'bg-blue-500/10 text-blue-500'
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                   onClick={() => setView(viewType)}
@@ -618,33 +664,35 @@ function CalendarPage () {
           {view === 'month' && (
             <div className='absolute inset-0'>
               <div className='h-full flex flex-col'>
-                {/* Weekdays Header - Also Sticky */}
-                <div className='sticky top-0 z-30 grid grid-cols-7 bg-white border-b border-gray-200'>
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
-                    day => (
-                      <div
-                        key={day}
-                        className='p-4 text-center font-semibold text-gray-600 uppercase text-sm'
-                      >
-                        {day}
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {/* Month Grid - Scrollable */}
+                {/* Month Table */}
                 <div className='flex-1 overflow-auto'>
-                  <div className='grid grid-cols-7 min-h-full'>
-                    {renderMonthView()}
-                  </div>
+                  <table className='w-full h-full border-collapse'>
+                    <thead className='sticky top-0 z-30 bg-white'>
+                      <tr>
+                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(
+                          day => (
+                            <th
+                              key={day}
+                              className='w-[14.28%] p-4 text-center font-semibold text-gray-600 uppercase text-sm border-b border-gray-200'
+                            >
+                              {day}
+                            </th>
+                          )
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>{renderMonthView()}</tbody>
+                  </table>
                 </div>
               </div>
             </div>
           )}
 
           {view === 'week' && (
-            <div className=' flex-1 grid grid-cols-1 md:grid-cols-7 '>
-              {renderWeekView()}
+            <div className='flex-1 flex flex-col overflow-hidden'>
+              <table className='w-full h-full border-collapse'>
+                {renderWeekView()}
+              </table>
             </div>
           )}
 
